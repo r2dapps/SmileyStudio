@@ -3,7 +3,7 @@ import { RecordingsRepository, RecordingMetadata } from '../db/recordings';
 import { BlobStorage } from '../db/blobStorage';
 import { ExportManager } from '../audio/recorder/ExportManager';
 import { BlobManager } from '../audio/recorder/BlobManager';
-import { FolderHeart, Play, Download, Trash2 } from 'lucide-react';
+import { FolderHeart, Play, Download, Trash2, Share2 } from 'lucide-react';
 
 export const VaultPage: React.FC = () => {
   const [recordings, setRecordings] = useState<RecordingMetadata[]>([]);
@@ -38,6 +38,14 @@ export const VaultPage: React.FC = () => {
     }
   };
 
+  const handleShare = async (item: RecordingMetadata) => {
+    const blob = await BlobStorage.getBlob(item.blobId);
+    if (blob) {
+      const cleanName = item.title.replace(/[^a-z0-9]/gi, '_');
+      await ExportManager.shareTake(blob, cleanName, 'wav');
+    }
+  };
+
   const handleExport = async (item: RecordingMetadata, format: 'wav' | 'webm') => {
     const blob = await BlobStorage.getBlob(item.blobId);
     if (blob) {
@@ -60,7 +68,7 @@ export const VaultPage: React.FC = () => {
     <div className="space-y-4 pb-20">
       <div className="border-b border-slate-800 pb-2">
         <h1 className="text-base font-bold">Smiley's Compositions Vault</h1>
-        <p className="text-xs text-slate-400">Offline Recorded Takes & Multi-Format Exports</p>
+        <p className="text-xs text-slate-400">Offline Recorded Takes, File Sharing & Multi-Format Exports</p>
       </div>
 
       <div className="glassmorphism p-4 rounded-2xl space-y-3 border border-slate-800">
@@ -101,7 +109,7 @@ export const VaultPage: React.FC = () => {
                   <audio src={activeAudioUrl.url} controls autoPlay className="w-full h-8 opacity-90 rounded-lg" />
                 )}
 
-                <div className="flex items-center space-x-2 pt-1">
+                <div className="flex flex-wrap items-center gap-2 pt-1">
                   <button
                     onClick={() => handlePlay(item)}
                     className="px-3 py-1.5 bg-pink-500/20 text-pink-400 border border-pink-500/40 rounded-lg text-xs font-bold flex items-center space-x-1 hover:bg-pink-500/30 transition"
@@ -111,19 +119,19 @@ export const VaultPage: React.FC = () => {
                   </button>
 
                   <button
+                    onClick={() => handleShare(item)}
+                    className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 active:scale-95 transition shadow-lg shadow-purple-600/30"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    <span>Share Take & App Link</span>
+                  </button>
+
+                  <button
                     onClick={() => handleExport(item, 'wav')}
                     className="px-2.5 py-1.5 bg-slate-800 text-slate-300 border border-slate-700 rounded-lg text-[11px] font-semibold flex items-center space-x-1 hover:text-white transition"
                   >
                     <Download className="w-3 h-3 text-purple-400" />
-                    <span>Export WAV</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleExport(item, 'webm')}
-                    className="px-2.5 py-1.5 bg-slate-800 text-slate-300 border border-slate-700 rounded-lg text-[11px] font-semibold flex items-center space-x-1 hover:text-white transition"
-                  >
-                    <Download className="w-3 h-3 text-cyan-400" />
-                    <span>Export WebM</span>
+                    <span>WAV</span>
                   </button>
                 </div>
               </div>

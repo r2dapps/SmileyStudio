@@ -3,7 +3,8 @@ import { RecordingsRepository, RecordingMetadata } from '../db/recordings';
 import { BlobStorage } from '../db/blobStorage';
 import { ExportManager } from '../audio/recorder/ExportManager';
 import { BlobManager } from '../audio/recorder/BlobManager';
-import { FolderHeart, Play, Download, Trash2, Share2 } from 'lucide-react';
+import { FolderHeart, Play, Download, Trash2, Share2, Archive } from 'lucide-react';
+import { soundEffects } from '../utils/audioFeedback';
 
 export const VaultPage: React.FC = () => {
   const [recordings, setRecordings] = useState<RecordingMetadata[]>([]);
@@ -23,6 +24,7 @@ export const VaultPage: React.FC = () => {
   }, []);
 
   const handlePlay = async (item: RecordingMetadata) => {
+    soundEffects.playClickChime();
     if (!item.id) return;
     if (activeAudioUrl && activeAudioUrl.id === item.id) {
       BlobManager.revokeURL(activeAudioUrl.url);
@@ -39,6 +41,7 @@ export const VaultPage: React.FC = () => {
   };
 
   const handleShare = async (item: RecordingMetadata) => {
+    soundEffects.playClickChime();
     const blob = await BlobStorage.getBlob(item.blobId);
     if (blob) {
       const cleanName = item.title.replace(/[^a-z0-9]/gi, '_');
@@ -47,6 +50,7 @@ export const VaultPage: React.FC = () => {
   };
 
   const handleExport = async (item: RecordingMetadata, format: 'wav' | 'webm') => {
+    soundEffects.playClickChime();
     const blob = await BlobStorage.getBlob(item.blobId);
     if (blob) {
       const cleanName = item.title.replace(/[^a-z0-9]/gi, '_');
@@ -54,7 +58,19 @@ export const VaultPage: React.FC = () => {
     }
   };
 
+  const handleBackupExport = () => {
+    soundEffects.playClickChime();
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(recordings, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `Smiley_Studio_Backup_${new Date().toISOString().slice(0,10)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+  };
+
   const handleDelete = async (item: RecordingMetadata) => {
+    soundEffects.playClickChime();
     if (!item.id) return;
     if (activeAudioUrl && activeAudioUrl.id === item.id) {
       BlobManager.revokeURL(activeAudioUrl.url);
@@ -66,24 +82,40 @@ export const VaultPage: React.FC = () => {
 
   return (
     <div className="space-y-4 pb-20">
-      <div className="border-b border-slate-800 pb-2">
-        <h1 className="text-base font-bold">Smiley's Compositions Vault</h1>
-        <p className="text-xs text-slate-400">Offline Recorded Takes, File Sharing & Multi-Format Exports</p>
+      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+        <div>
+          <h1 className="text-base font-bold flex items-center space-x-2">
+            <FolderHeart className="w-5 h-5 text-pink-400" />
+            <span>My Recorded Songs</span>
+          </h1>
+          <p className="text-xs text-slate-400">Recorded Takes, File Sharing & Multi-Format Exports</p>
+        </div>
+
+        {recordings.length > 0 && (
+          <button
+            onClick={handleBackupExport}
+            className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold rounded-xl flex items-center space-x-1 border border-slate-700 transition"
+            title="Export Song Library Backup (.json)"
+          >
+            <Archive className="w-3.5 h-3.5 text-purple-400" />
+            <span>Backup</span>
+          </button>
+        )}
       </div>
 
       <div className="glassmorphism p-4 rounded-2xl space-y-3 border border-slate-800">
         <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-widest border-b border-slate-800 pb-2">
           <span className="flex items-center space-x-1.5">
             <FolderHeart className="w-4 h-4 text-pink-400" />
-            <span>Saved Composition Takes</span>
+            <span>Song Library</span>
           </span>
           <span className="text-[10px] text-pink-400 font-mono">{recordings.length} Songs</span>
         </div>
 
         {recordings.length === 0 ? (
           <div className="py-8 text-center space-y-2">
-            <p className="text-xs text-slate-500 italic">No saved composition takes yet.</p>
-            <p className="text-[11px] text-slate-600">Hit Record in the Studio tab to capture Smiley's songs!</p>
+            <p className="text-xs text-slate-500 italic">No recorded songs in your library yet.</p>
+            <p className="text-[11px] text-slate-600">Tap Record in the Studio tab to capture Smiley's songs!</p>
           </div>
         ) : (
           <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
@@ -99,7 +131,7 @@ export const VaultPage: React.FC = () => {
                   <button
                     onClick={() => handleDelete(item)}
                     className="p-1 text-slate-500 hover:text-red-400 transition"
-                    title="Delete Take"
+                    title="Delete Song"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -123,7 +155,7 @@ export const VaultPage: React.FC = () => {
                     className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 active:scale-95 transition shadow-lg shadow-purple-600/30"
                   >
                     <Share2 className="w-3.5 h-3.5" />
-                    <span>Share Take & App Link</span>
+                    <span>Share Take</span>
                   </button>
 
                   <button

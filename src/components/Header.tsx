@@ -1,7 +1,8 @@
 import React from 'react';
-import { Headphones, Settings } from 'lucide-react';
+import { Headphones, Settings, Sparkles } from 'lucide-react';
 import { useStudioStore } from '../store/useStudioStore';
 import { useNavigate } from 'react-router-dom';
+import { soundEffects } from '../utils/audioFeedback';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -10,18 +11,31 @@ export const Header: React.FC = () => {
   const liveMonitor = useStudioStore((state) => state.liveMonitor);
   const toggleLiveMonitor = useStudioStore((state) => state.toggleLiveMonitor);
 
+  const handleMonitorToggle = () => {
+    soundEffects.playClickChime();
+    toggleLiveMonitor();
+  };
+
+  const handleSettingsClick = () => {
+    soundEffects.playClickChime();
+    navigate('/settings');
+  };
+
   return (
     <header className="sticky top-0 z-50 glassmorphism px-4 py-3 border-b border-slate-800 flex items-center justify-between">
       <div className="flex items-center space-x-2.5">
         <div className={`w-3 h-3 rounded-full ${isRecording ? 'bg-red-500 animate-ping' : isMicActive ? 'bg-emerald-500 animate-pulse' : 'bg-pink-500'}`} />
-        <h1 className="font-black text-lg tracking-wider bg-gradient-to-r from-pink-500 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
-          Smiley Studio 💖
-        </h1>
+        <div className="flex items-center space-x-1.5">
+          <h1 className="font-black text-lg tracking-wider bg-gradient-to-r from-pink-500 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
+            Smiley Studio
+          </h1>
+          <Sparkles className="w-4 h-4 text-pink-400" />
+        </div>
       </div>
 
       <div className="flex items-center space-x-2">
         <button
-          onClick={() => toggleLiveMonitor()}
+          onClick={handleMonitorToggle}
           className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1.5 transition active:scale-95 border ${
             liveMonitor
               ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
@@ -34,7 +48,7 @@ export const Header: React.FC = () => {
         </button>
 
         <button
-          onClick={() => navigate('/settings')}
+          onClick={handleSettingsClick}
           className="p-1.5 text-slate-400 hover:text-white rounded-full bg-slate-800/80 border border-slate-700 transition"
           aria-label="Settings"
         >

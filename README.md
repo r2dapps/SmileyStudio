@@ -1,70 +1,35 @@
-# 💖 Smiley Studio (v1.0.0)
+# Smiley Studio (v1.0.0)
 
-A custom, high-performance, mobile-optimized **Pro Vocal Recording & Pitch Trainer Progressive Web Application (PWA)** designed specifically for singer **Smiley**.
+A high-performance, mobile-optimized **Pro Vocal Recording & Pitch Trainer Progressive Web Application (PWA)** designed for singer **Smiley**.
 
 ![Smiley Studio App Icon](public/icon-512.png)
 
 ---
 
-## 🌟 Live Demo & Web App URL
+## 🌐 Live Web Application & Repository
 
-- **Hosted Web App**: [https://r2dapps.github.io/SmileyStudio/](https://r2dapps.github.io/SmileyStudio/)
+- **Live Hosted Application**: [https://r2dapps.github.io/SmileyStudio/](https://r2dapps.github.io/SmileyStudio/)
 - **GitHub Repository**: [https://github.com/r2dapps/SmileyStudio](https://github.com/r2dapps/SmileyStudio)
 
 ---
 
-## 🌟 Features Overview
+## 🌟 Key Features
 
-- **🎙️ Real-time Recording Studio**: Low-latency live mic monitoring, pitch display, and high-quality multi-stream audio recording.
-- **🎛️ Pro Vocal FX Rack**: 7 real-time DSP audio effect plugins:
-  - **Noise Gate**: Mutes room noise hiss automatically.
-  - **Parametric EQ**: Highpass, Lowpass, Bandpass, and Peaking frequency shaping.
-  - **Dynamics Compressor**: Studio volume leveling.
-  - **Tube Saturation**: Harmonic warmth waveshaper.
-  - **Stereo Chorus**: LFO modulated voice doubler.
-  - **Feedback Delay**: Echo repeat circuit.
-  - **Concert Reverb**: Algorithmic convolver space reverb.
-- **📱 Instagram-Style Bottom Navigation**: Floating glassmorphism tab bar with active glowing icons:
-  - **Studio** (`/`): Realtime spectrum visualizer & quick preset cards.
-  - **FX Rack** (`/fx`): Master vocal chain sliders.
-  - **Tracks** (`/tracks`): Karaoke backing track song loader & volume mixer.
-  - **Vault** (`/vault`): IndexedDB local song history, audio playback, WAV & WebM exports.
-  - **Practice** (`/practice`): Interactive Chromatic Pitch Tuner needle gauge & Studio Metronome (40-240 BPM).
-  - **Settings** (`/settings`): Mobile performance modes & app information.
-- **⚡ Progressive Web App (PWA)**: Installable on iOS/Android home screens, full offline support, and Screen Wake Lock API to prevent display sleep during vocal takes.
-- **💸 100% Free**: Zero subscription fees, zero server costs, hosted 100% free on GitHub Pages.
-
----
-
-## 🛠️ Tech Stack & Architecture
-
-- **Core**: React 18, TypeScript, Vite, React Router v6, Zustand, Tailwind CSS.
-- **Audio Core**: Decoupled Web Audio API DSP Engine (`StudioController.ts`, `GraphBuilder.ts`, `AudioEngine.ts`).
-- **Database**: Offline dual-store IndexedDB (`recordings` metadata + `blobs` audio store).
-
----
-
-## 🚀 How to Host on GitHub Pages (Auto-Deployment)
-
-### Method 1: Automatic GitHub Actions (Recommended)
-This repository includes a pre-configured GitHub Actions workflow in `.github/workflows/deploy.yml`.
-
-1. Push your project code to GitHub:
-   ```bash
-   git init
-   git add .
-   git commit -m "Initial commit - Smiley Studio v1.0.0"
-   git remote add origin https://github.com/r2dapps/SmileyStudio.git
-   git push -u origin main
-   ```
-2. GitHub Actions will **automatically build and deploy** your app to GitHub Pages!
-3. In your GitHub repository settings, go to **Pages** -> Set Source to **`gh-pages` branch**.
-
-### Method 2: Manual Deployment Script
-You can also deploy manually at any time with one terminal command:
-```bash
-npm run deploy
-```
+- **🎙️ Real-time Recording Studio**: Single-click vocal recording, real-time oscilloscope spectrum visualizer, pitch detection, and live ear monitor mode.
+- **🎛️ Vocal FX Rack**: Preset vocal templates (Pop Lead, Acoustic Warmth, Pitch Snap, Lo-Fi Vibe, Vintage Radio, Raw Dry) that auto-sync sliders in real time with custom manual override controls:
+  - **Mic Gain Boost**: Adjustable input gain.
+  - **Noise Gate**: Automatic room hiss suppression.
+  - **Tube Saturation**: Harmonic analog warmth.
+  - **Stereo Chorus**: Voice doubling effect.
+  - **Echo Delay**: Feedback delay circuit.
+  - **Concert Reverb**: Spatial convolver reverb.
+- **📱 Instagram-Style Bottom Navigation**:
+  - **Studio**: Spectrum visualizer & quick preset cards.
+  - **FX Rack**: Preset templates & slider controls.
+  - **Tracks**: Backing track player & volume mixer.
+  - **My Songs**: Song library, audio player, native file share, and backup exports.
+  - **Practice**: Chromatic Tuner needle gauge & Metronome ($40\text{--}240\text{ BPM}$).
+- **⚡ PWA & Auto-Cache Updates**: Installable home-screen app with automatic cache invalidation on new deployments.
 
 ---
 
@@ -83,10 +48,13 @@ npm install
 # Start local dev server
 npm run dev
 
-# Production build
+# Build for production
 npm run build
+
+# Deploy to GitHub Pages
+npm run deploy
 ```
 
 ---
 
-Made with ❤️ for **Smiley**.
+Designed for **Smiley**.

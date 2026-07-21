@@ -3,6 +3,7 @@ import { useStudioStore } from '../store/useStudioStore';
 import { WaveformCanvas } from '../components/visualizers/WaveformCanvas';
 import { PWAInstaller } from '../components/PWAInstaller';
 import { Disc, Headphones, Sparkles, Sliders, Radio, Wand2, Flame, AlertCircle, X } from 'lucide-react';
+import { soundEffects } from '../utils/audioFeedback';
 
 export const StudioPage: React.FC = () => {
   const isMicActive = useStudioStore((state) => state.isMicActive);
@@ -24,6 +25,21 @@ export const StudioPage: React.FC = () => {
     { id: 'radio', label: 'Vintage Radio', icon: Radio, color: 'text-emerald-400' },
     { id: 'bypass', label: 'Raw Dry Voice', icon: Sliders, color: 'text-slate-400' },
   ];
+
+  const handleSelectPreset = (id: string) => {
+    soundEffects.playPresetChime();
+    setPreset(id);
+  };
+
+  const handleToggleRecord = () => {
+    soundEffects.playClickChime();
+    toggleRecording();
+  };
+
+  const handleToggleMonitor = () => {
+    soundEffects.playClickChime();
+    toggleLiveMonitor();
+  };
 
   return (
     <div className="space-y-4 pb-20">
@@ -53,7 +69,7 @@ export const StudioPage: React.FC = () => {
 
         {!isMicActive && (
           <div className="text-slate-500 text-xs font-mono italic z-10">
-            Click Record Take below to start singing
+            Click Record Vocal Take below to start singing
           </div>
         )}
 
@@ -76,7 +92,7 @@ export const StudioPage: React.FC = () => {
             return (
               <button
                 key={p.id}
-                onClick={() => setPreset(p.id)}
+                onClick={() => handleSelectPreset(p.id)}
                 className={`p-3 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1.5 active:scale-95 transition ${
                   isSelected ? 'border-pink-500 text-white bg-pink-500/10' : 'text-slate-400 hover:text-white'
                 }`}
@@ -92,7 +108,7 @@ export const StudioPage: React.FC = () => {
       {/* Main Recording & Ear Monitor Controls */}
       <section className="space-y-3 pt-2">
         <button
-          onClick={() => toggleRecording()}
+          onClick={handleToggleRecord}
           className={`w-full p-4 rounded-2xl flex items-center justify-center space-x-2 active:scale-95 transition shadow-xl ${
             isRecording
               ? 'bg-red-600 text-white animate-pulse border border-red-400'
@@ -101,13 +117,13 @@ export const StudioPage: React.FC = () => {
         >
           <Disc className="w-6 h-6" />
           <span className="text-sm font-black uppercase tracking-wider">
-            {isRecording ? 'Stop Recording' : 'Record Vocal Take 🎙️'}
+            {isRecording ? 'Stop Recording' : 'Record Vocal Take'}
           </span>
         </button>
 
         <div className="flex justify-center">
           <button
-            onClick={() => toggleLiveMonitor()}
+            onClick={handleToggleMonitor}
             className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1.5 transition active:scale-95 border ${
               liveMonitor
                 ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'

@@ -1,13 +1,14 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Mic, Sliders, Music, FolderHeart, Music2 } from 'lucide-react';
+import { soundEffects } from '../utils/audioFeedback';
 
 export const BottomNav: React.FC = () => {
   const navItems = [
     { to: '/', icon: Mic, label: 'Studio' },
     { to: '/fx', icon: Sliders, label: 'FX Rack' },
     { to: '/tracks', icon: Music, label: 'Tracks' },
-    { to: '/vault', icon: FolderHeart, label: 'Vault' },
+    { to: '/vault', icon: FolderHeart, label: 'My Songs' },
     { to: '/practice', icon: Music2, label: 'Practice' },
   ];
 
@@ -18,6 +19,7 @@ export const BottomNav: React.FC = () => {
           <NavLink
             key={item.to}
             to={item.to}
+            onClick={() => soundEffects.playClickChime()}
             className={({ isActive }) =>
               `flex flex-col items-center justify-center flex-1 py-1.5 px-1 rounded-xl transition-all duration-200 cursor-pointer select-none ${
                 isActive

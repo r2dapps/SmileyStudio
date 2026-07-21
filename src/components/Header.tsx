@@ -1,5 +1,5 @@
 import React from 'react';
-import { Mic, MicOff, Settings } from 'lucide-react';
+import { Headphones, Settings } from 'lucide-react';
 import { useStudioStore } from '../store/useStudioStore';
 import { useNavigate } from 'react-router-dom';
 
@@ -7,7 +7,8 @@ export const Header: React.FC = () => {
   const navigate = useNavigate();
   const isMicActive = useStudioStore((state) => state.isMicActive);
   const isRecording = useStudioStore((state) => state.isRecording);
-  const toggleMic = useStudioStore((state) => state.toggleMic);
+  const liveMonitor = useStudioStore((state) => state.liveMonitor);
+  const toggleLiveMonitor = useStudioStore((state) => state.toggleLiveMonitor);
 
   return (
     <header className="sticky top-0 z-50 glassmorphism px-4 py-3 border-b border-slate-800 flex items-center justify-between">
@@ -20,15 +21,16 @@ export const Header: React.FC = () => {
 
       <div className="flex items-center space-x-2">
         <button
-          onClick={() => toggleMic()}
+          onClick={() => toggleLiveMonitor()}
           className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1.5 transition active:scale-95 border ${
-            isMicActive
+            liveMonitor
               ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
               : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
           }`}
+          title="Toggle Live Ear Monitor"
         >
-          {isMicActive ? <Mic className="w-3.5 h-3.5" /> : <MicOff className="w-3.5 h-3.5" />}
-          <span>{isMicActive ? 'Mic On' : 'Mic Off'}</span>
+          <Headphones className="w-3.5 h-3.5" />
+          <span>{liveMonitor ? 'Monitor On' : 'Ear Monitor'}</span>
         </button>
 
         <button

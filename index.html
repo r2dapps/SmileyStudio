@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/SmileyStudio/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="theme-color" content="#090d16" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="description" content="Smiley Studio - Pro Vocal Recording Studio & Pitch Trainer PWA" />
+    <title>Smiley Studio 💖</title>
+    <link rel="manifest" href="/SmileyStudio/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+      #app-splash-screen {
+        position: fixed;
+        inset: 0;
+        background: #090d16;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        font-family: 'Inter', system-ui, sans-serif;
+        transition: opacity 0.4s ease, visibility 0.4s ease;
+      }
+      .splash-logo {
+        width: 96px;
+        height: 96px;
+        border-radius: 24px;
+        box-shadow: 0 0 30px rgba(236, 72, 153, 0.6);
+        animation: pulse-glow 2s infinite ease-in-out;
+      }
+      .splash-title {
+        margin-top: 16px;
+        font-weight: 900;
+        font-size: 20px;
+        letter-spacing: 0.05em;
+        background: linear-gradient(to right, #ec4899, #c084fc, #818cf8);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .splash-spinner {
+        margin-top: 24px;
+        width: 32px;
+        height: 32px;
+        border: 3px solid rgba(236, 72, 153, 0.2);
+        border-top-color: #ec4899;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes pulse-glow {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 30px rgba(236, 72, 153, 0.5); }
+        50% { transform: scale(1.05); box-shadow: 0 0 50px rgba(236, 72, 153, 0.8); }
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
+    <script type="module" crossorigin src="/SmileyStudio/assets/index-DFqGbqw3.js"></script>
+    <link rel="stylesheet" crossorigin href="/SmileyStudio/assets/index-WnRfcDXF.css">
+  </head>
+  <body class="bg-slate-950 text-white min-h-screen select-none font-sans antialiased overflow-x-hidden">
+    <div id="app-splash-screen">
+      <img src="/SmileyStudio/icon-192.png" alt="Smiley Studio" class="splash-logo" />
+      <div class="splash-title">Smiley Studio 💖</div>
+      <div class="splash-spinner"></div>
+    </div>
+
+    <div id="root"></div>
+
+    <script>
+      window.addEventListener('load', function() {
+        const splash = document.getElementById('app-splash-screen');
+        if (splash) {
+          setTimeout(function() {
+            splash.style.opacity = '0';
+            splash.style.visibility = 'hidden';
+            setTimeout(function() { splash.remove(); }, 400);
+          }, 300);
+        }
+      });
+    </script>
+  </body>
+</html>

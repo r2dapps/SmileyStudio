@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useStudioStore } from '../store/useStudioStore';
 import { WaveformCanvas } from '../components/visualizers/WaveformCanvas';
 
-import { Disc, Headphones, Mic, Sliders, Radio, Wand2, Flame, AlertCircle, X, Camera, RefreshCw, Video, Film, Bookmark, Maximize2, Minimize2, ChevronDown, ChevronUp, Crop } from 'lucide-react';
+import { Disc, Headphones, Mic, Sliders, Radio, Wand2, Flame, AlertCircle, X, Camera, SwitchCamera, FlipHorizontal, Video, Film, Bookmark, Maximize2, Minimize2, ChevronDown, ChevronUp, Crop } from 'lucide-react';
 import { soundEffects } from '../utils/audioFeedback';
 import { VIDEO_FILTERS, VideoFilterOption } from '../utils/videoFilters';
 import { VideoRecorderManager } from '../audio/recorder/VideoRecorder';
@@ -332,17 +332,23 @@ export const StudioPage: React.FC = () => {
                   <span>{isVideoRecording ? 'REC Performance' : `${selectedFilter.name} (${aspectRatio})`}</span>
                 </div>
 
+                {/* Camera Switch Button */}
                 <button
                   onClick={handleFlipCamera}
-                  className="absolute top-2.5 right-3 flex items-center space-x-1 bg-black/60 hover:bg-black/80 text-white rounded-full px-2.5 py-1.5 transition border border-white/20 z-10 text-[10px] font-bold"
-                  title={cameraFacing === 'user' ? 'Switch to Rear Camera' : 'Switch to Front Selfie Camera'}
+                  className="absolute top-2.5 right-3 flex items-center space-x-1.5 bg-black/60 hover:bg-black/80 text-white rounded-full px-2.5 py-1.5 transition border border-white/20 z-10 text-[10px] font-bold"
+                  title={cameraFacing === 'user' ? 'Switch to Rear Camera' : 'Switch to Front Camera'}
                 >
-                  <RefreshCw
-                    className="w-3.5 h-3.5"
-                    style={{ transform: cameraFacing === 'user' ? 'scaleX(-1)' : 'none' }}
-                  />
+                  <SwitchCamera className="w-4 h-4" />
                   <span>{cameraFacing === 'user' ? 'Front' : 'Rear'}</span>
                 </button>
+
+                {/* Mirror Indicator — front cam is always mirrored */}
+                {cameraFacing === 'user' && (
+                  <div className="absolute top-10 right-3 flex items-center space-x-1 bg-black/50 text-white/70 rounded-md px-2 py-0.5 text-[9px] font-bold z-10 border border-white/10">
+                    <FlipHorizontal className="w-3 h-3" />
+                    <span>Mirror</span>
+                  </div>
+                )}
 
                 <div className="absolute bottom-2.5 right-3 text-xs font-mono bg-black/70 px-2.5 py-1 rounded-md text-pink-400 border border-pink-500/30 z-10">
                   Detected Pitch: <span className="font-bold text-white">{detectedNote}</span>

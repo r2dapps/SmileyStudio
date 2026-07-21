@@ -10,6 +10,7 @@
   --card-bg: rgba(15, 23, 42, 0.85);
 }
 
+/* Built-in themes */
 .theme-neonPink {
   --bg-main: #090d16;
   --accent: #ec4899;
@@ -40,6 +41,47 @@
   --accent-secondary: #f97316;
   --border-accent: rgba(251, 191, 36, 0.35);
   --card-bg: rgba(40, 20, 6, 0.85);
+}
+
+.theme-midnightPurple {
+  --bg-main: #0a0614;
+  --accent: #a855f7;
+  --accent-secondary: #7c3aed;
+  --border-accent: rgba(168, 85, 247, 0.35);
+  --card-bg: rgba(18, 8, 36, 0.85);
+}
+
+.theme-roseGold {
+  --bg-main: #180a0d;
+  --accent: #fb7185;
+  --accent-secondary: #f43f5e;
+  --border-accent: rgba(251, 113, 133, 0.35);
+  --card-bg: rgba(40, 12, 18, 0.85);
+}
+
+.theme-oceanDeep {
+  --bg-main: #021824;
+  --accent: #06b6d4;
+  --accent-secondary: #0ea5e9;
+  --border-accent: rgba(6, 182, 212, 0.35);
+  --card-bg: rgba(4, 32, 50, 0.85);
+}
+
+.theme-crimsonFire {
+  --bg-main: #1a0404;
+  --accent: #ef4444;
+  --accent-secondary: #f97316;
+  --border-accent: rgba(239, 68, 68, 0.35);
+  --card-bg: rgba(40, 8, 8, 0.85);
+}
+
+/* Custom user theme — driven by inline CSS vars override */
+.theme-custom {
+  --bg-main: var(--custom-bg, #090d16);
+  --accent: var(--custom-accent, #ec4899);
+  --accent-secondary: var(--custom-secondary, #c084fc);
+  --border-accent: var(--custom-border, rgba(236, 72, 153, 0.35));
+  --card-bg: var(--custom-card, rgba(15, 23, 42, 0.85));
 }
 
 @layer utilities {

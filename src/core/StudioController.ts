@@ -20,7 +20,24 @@ export type CustomPreset = {
   };
 };
 
-export type AppTheme = 'neonPink' | 'cyberBlue' | 'emeraldStage' | 'amberSunset';
+export type AppTheme =
+  | 'neonPink'
+  | 'cyberBlue'
+  | 'emeraldStage'
+  | 'amberSunset'
+  | 'midnightPurple'
+  | 'roseGold'
+  | 'oceanDeep'
+  | 'crimsonFire'
+  | 'custom';
+
+export type CustomThemeTemplate = {
+  id: string;
+  label: string;
+  accent: string;
+  secondary: string;
+  bg: string;
+};
 
 export type StudioState = {
   isMicActive: boolean;
@@ -31,6 +48,8 @@ export type StudioState = {
   activePresetId: string;
   customPresets: CustomPreset[];
   appTheme: AppTheme;
+  customThemeTemplates: CustomThemeTemplate[];
+  activeCustomThemeId: string | null;
   detectedPitchHz: number;
   detectedNote: string;
   detectedCents: number;
@@ -55,7 +74,7 @@ export class StudioController {
   private recorder: AudioRecorder = new AudioRecorder();
   private recordingStartTime: number = 0;
   private pitchTimerId: any = null;
-  
+
   private state: StudioState = {
     isMicActive: false,
     isRecording: false,
@@ -65,6 +84,8 @@ export class StudioController {
     activePresetId: 'popLead',
     customPresets: [],
     appTheme: 'neonPink',
+    customThemeTemplates: [],
+    activeCustomThemeId: null,
     detectedPitchHz: 0,
     detectedNote: '--',
     detectedCents: 0,
@@ -87,6 +108,7 @@ export class StudioController {
     this.capabilities = detectCapabilities();
     this.loadCustomPresetsFromStorage();
     this.loadThemeFromStorage();
+    this.loadCustomThemeTemplatesFromStorage();
   }
 
   public static getInstance(): StudioController {
@@ -99,20 +121,29 @@ export class StudioController {
   private loadCustomPresetsFromStorage() {
     try {
       const saved = localStorage.getItem('smiley_custom_presets');
-      if (saved) {
-        this.state.customPresets = JSON.parse(saved);
-      }
-    } catch (e) {
-      console.warn('Failed to load custom presets:', e);
-    }
+      if (saved) this.state.customPresets = JSON.parse(saved);
+    } catch (e) {}
   }
 
   private loadThemeFromStorage() {
     try {
       const savedTheme = localStorage.getItem('smiley_app_theme') as AppTheme;
-      if (savedTheme) {
-        this.state.appTheme = savedTheme;
-      }
+      if (savedTheme) this.state.appTheme = savedTheme;
+      const savedCustomId = localStorage.getItem('smiley_active_custom_theme');
+      if (savedCustomId) this.state.activeCustomThemeId = savedCustomId;
+    } catch (e) {}
+  }
+
+  private loadCustomThemeTemplatesFromStorage() {
+    try {
+      const saved = localStorage.getItem('smiley_custom_themes');
+      if (saved) this.state.customThemeTemplates = JSON.parse(saved);
+    } catch (e) {}
+  }
+
+  private saveCustomThemesToStorage() {
+    try {
+      localStorage.setItem('smiley_custom_themes', JSON.stringify(this.state.customThemeTemplates));
     } catch (e) {}
   }
 
@@ -124,12 +155,40 @@ export class StudioController {
     this.notify();
   }
 
+  public setActiveCustomTheme(id: string) {
+    this.state.activeCustomThemeId = id;
+    this.state.appTheme = 'custom';
+    try {
+      localStorage.setItem('smiley_active_custom_theme', id);
+      localStorage.setItem('smiley_app_theme', 'custom');
+    } catch (e) {}
+    this.notify();
+  }
+
+  public saveCustomThemeTemplate(template: Omit<CustomThemeTemplate, 'id'>): string {
+    const id = `theme_${Date.now()}`;
+    const newTemplate: CustomThemeTemplate = { ...template, id };
+    this.state.customThemeTemplates.push(newTemplate);
+    this.saveCustomThemesToStorage();
+    this.notify();
+    return id;
+  }
+
+  public deleteCustomThemeTemplate(id: string) {
+    this.state.customThemeTemplates = this.state.customThemeTemplates.filter((t) => t.id !== id);
+    if (this.state.activeCustomThemeId === id) {
+      this.state.activeCustomThemeId = null;
+      this.state.appTheme = 'neonPink';
+      try { localStorage.setItem('smiley_app_theme', 'neonPink'); } catch (e) {}
+    }
+    this.saveCustomThemesToStorage();
+    this.notify();
+  }
+
   private saveCustomPresetsToStorage() {
     try {
       localStorage.setItem('smiley_custom_presets', JSON.stringify(this.state.customPresets));
-    } catch (e) {
-      console.warn('Failed to save custom presets:', e);
-    }
+    } catch (e) {}
   }
 
   public getState(): StudioState {
@@ -168,7 +227,6 @@ export class StudioController {
         reverbWet: this.state.reverbWet,
       },
     };
-
     this.state.customPresets.push(newPreset);
     this.state.activePresetId = id;
     this.saveCustomPresetsToStorage();
@@ -184,8 +242,6 @@ export class StudioController {
       this.notify();
     }
   }
-
-  // --- Controller Command Interface ---
 
   public async toggleLiveMonitor(): Promise<boolean> {
     this.state.liveMonitor = !this.state.liveMonitor;
@@ -217,7 +273,6 @@ export class StudioController {
       this.startPitchDetectionLoop();
       return true;
     } catch (err: any) {
-      console.error('Microphone start failed:', err);
       this.state.isMicActive = false;
       this.state.micError = err?.message || 'Microphone access denied. Please grant microphone permission in browser settings.';
       this.notify();
@@ -235,7 +290,6 @@ export class StudioController {
     if (!this.state.isRecording) {
       const started = await this.startMicEngine();
       if (!started) return false;
-
       const graph = audioEngine.getGraph();
       if (graph) {
         const audioCtx = graph.outputNode.context as AudioContext;
@@ -258,7 +312,6 @@ export class StudioController {
       const blob = await this.recorder.stopRecording();
       const duration = Math.round((Date.now() - this.recordingStartTime) / 1000);
       const title = `Smiley Take ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-      
       const blobId = `blob_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
       await RecordingsRepository.saveRecording(
         {
@@ -281,9 +334,7 @@ export class StudioController {
       console.error('Failed to stop/save recording:', e);
     } finally {
       this.state.isRecording = false;
-      if (!this.state.liveMonitor) {
-        this.stopMicEngine();
-      }
+      if (!this.state.liveMonitor) this.stopMicEngine();
       this.notify();
     }
   }
@@ -293,10 +344,8 @@ export class StudioController {
     this.pitchTimerId = setInterval(() => {
       const analyser = audioEngine.getAnalyser();
       if (!analyser || !this.state.isMicActive) return;
-
       const buffer = new Float32Array(analyser.fftSize);
       analyser.getFloatTimeDomainData(buffer);
-
       const ctx = analyser.context;
       const hz = autoCorrelatePitch(buffer, ctx.sampleRate);
       if (hz > 0) {
@@ -325,7 +374,6 @@ export class StudioController {
 
   public setPreset(presetId: string) {
     this.state.activePresetId = presetId;
-
     const custom = this.state.customPresets.find((p) => p.id === presetId);
     if (custom) {
       this.state.micGain = custom.params.micGain;
@@ -336,55 +384,24 @@ export class StudioController {
       this.state.echoFeedback = custom.params.echoFeedback;
       this.state.reverbWet = custom.params.reverbWet;
     } else if (presetId === 'popLead') {
-      this.state.micGain = 1.0;
-      this.state.noiseGateThreshold = 0.01;
-      this.state.tubeSaturation = 15;
-      this.state.chorusDepth = 0.4;
-      this.state.echoDelayTime = 0.25;
-      this.state.echoFeedback = 0.35;
-      this.state.reverbWet = 0.35;
+      this.state.micGain = 1.0; this.state.noiseGateThreshold = 0.01; this.state.tubeSaturation = 15;
+      this.state.chorusDepth = 0.4; this.state.echoDelayTime = 0.25; this.state.echoFeedback = 0.35; this.state.reverbWet = 0.35;
     } else if (presetId === 'warmth') {
-      this.state.micGain = 1.1;
-      this.state.noiseGateThreshold = 0.008;
-      this.state.tubeSaturation = 25;
-      this.state.chorusDepth = 0.2;
-      this.state.echoDelayTime = 0.15;
-      this.state.echoFeedback = 0.2;
-      this.state.reverbWet = 0.45;
+      this.state.micGain = 1.1; this.state.noiseGateThreshold = 0.008; this.state.tubeSaturation = 25;
+      this.state.chorusDepth = 0.2; this.state.echoDelayTime = 0.15; this.state.echoFeedback = 0.2; this.state.reverbWet = 0.45;
     } else if (presetId === 'pitchAssist') {
-      this.state.micGain = 1.0;
-      this.state.noiseGateThreshold = 0.012;
-      this.state.tubeSaturation = 10;
-      this.state.chorusDepth = 0.5;
-      this.state.echoDelayTime = 0.3;
-      this.state.echoFeedback = 0.4;
-      this.state.reverbWet = 0.3;
+      this.state.micGain = 1.0; this.state.noiseGateThreshold = 0.012; this.state.tubeSaturation = 10;
+      this.state.chorusDepth = 0.5; this.state.echoDelayTime = 0.3; this.state.echoFeedback = 0.4; this.state.reverbWet = 0.3;
     } else if (presetId === 'lofi') {
-      this.state.micGain = 0.9;
-      this.state.noiseGateThreshold = 0.02;
-      this.state.tubeSaturation = 40;
-      this.state.chorusDepth = 0.6;
-      this.state.echoDelayTime = 0.4;
-      this.state.echoFeedback = 0.5;
-      this.state.reverbWet = 0.6;
+      this.state.micGain = 0.9; this.state.noiseGateThreshold = 0.02; this.state.tubeSaturation = 40;
+      this.state.chorusDepth = 0.6; this.state.echoDelayTime = 0.4; this.state.echoFeedback = 0.5; this.state.reverbWet = 0.6;
     } else if (presetId === 'radio') {
-      this.state.micGain = 1.2;
-      this.state.noiseGateThreshold = 0.025;
-      this.state.tubeSaturation = 35;
-      this.state.chorusDepth = 0.0;
-      this.state.echoDelayTime = 0.1;
-      this.state.echoFeedback = 0.1;
-      this.state.reverbWet = 0.1;
+      this.state.micGain = 1.2; this.state.noiseGateThreshold = 0.025; this.state.tubeSaturation = 35;
+      this.state.chorusDepth = 0.0; this.state.echoDelayTime = 0.1; this.state.echoFeedback = 0.1; this.state.reverbWet = 0.1;
     } else if (presetId === 'bypass') {
-      this.state.micGain = 1.0;
-      this.state.noiseGateThreshold = 0.005;
-      this.state.tubeSaturation = 0;
-      this.state.chorusDepth = 0.0;
-      this.state.echoDelayTime = 0.05;
-      this.state.echoFeedback = 0.0;
-      this.state.reverbWet = 0.0;
+      this.state.micGain = 1.0; this.state.noiseGateThreshold = 0.005; this.state.tubeSaturation = 0;
+      this.state.chorusDepth = 0.0; this.state.echoDelayTime = 0.05; this.state.echoFeedback = 0.0; this.state.reverbWet = 0.0;
     }
-
     this.applyPresetToAudioGraph(presetId);
     this.applyParamsToAudioGraph();
     this.notify();
@@ -406,24 +423,16 @@ export class StudioController {
   private applyPresetToAudioGraph(presetId: string) {
     const graph = audioEngine.getGraph();
     if (!graph) return;
-
-    if (presetId === 'popLead') {
-      graph.eq.update({ type: 'highpass', frequency: 120 });
-    } else if (presetId === 'warmth') {
-      graph.eq.update({ type: 'peaking', frequency: 250, gain: 4 });
-    } else if (presetId === 'lofi') {
-      graph.eq.update({ type: 'bandpass', frequency: 1500 });
-    } else if (presetId === 'radio') {
-      graph.eq.update({ type: 'bandpass', frequency: 2000 });
-    } else if (presetId === 'bypass') {
-      graph.eq.update({ type: 'allpass' });
-    }
+    if (presetId === 'popLead') graph.eq.update({ type: 'highpass', frequency: 120 });
+    else if (presetId === 'warmth') graph.eq.update({ type: 'peaking', frequency: 250, gain: 4 });
+    else if (presetId === 'lofi') graph.eq.update({ type: 'bandpass', frequency: 1500 });
+    else if (presetId === 'radio') graph.eq.update({ type: 'bandpass', frequency: 2000 });
+    else if (presetId === 'bypass') graph.eq.update({ type: 'allpass' });
   }
 
   private applyParamsToAudioGraph() {
     const graph = audioEngine.getGraph();
     if (!graph) return;
-
     graph.setMicGain(this.state.micGain);
     graph.gate.update({ threshold: this.state.noiseGateThreshold });
     graph.saturation.update({ amount: this.state.tubeSaturation });

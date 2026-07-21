@@ -1,14 +1,16 @@
 import React from 'react';
 import { useStudioStore } from '../store/useStudioStore';
 import { WaveformCanvas } from '../components/visualizers/WaveformCanvas';
-import { Mic, Disc, Sparkles, Sliders, Radio, Headphones, Wand2, Flame } from 'lucide-react';
+import { PWAInstaller } from '../components/PWAInstaller';
+import { Disc, Headphones, Sparkles, Sliders, Radio, Wand2, Flame } from 'lucide-react';
 
 export const StudioPage: React.FC = () => {
   const isMicActive = useStudioStore((state) => state.isMicActive);
   const isRecording = useStudioStore((state) => state.isRecording);
+  const liveMonitor = useStudioStore((state) => state.liveMonitor);
   const activePresetId = useStudioStore((state) => state.activePresetId);
   const detectedNote = useStudioStore((state) => state.detectedNote);
-  const toggleMic = useStudioStore((state) => state.toggleMic);
+  const toggleLiveMonitor = useStudioStore((state) => state.toggleLiveMonitor);
   const toggleRecording = useStudioStore((state) => state.toggleRecording);
   const setPreset = useStudioStore((state) => state.setPreset);
 
@@ -23,17 +25,20 @@ export const StudioPage: React.FC = () => {
 
   return (
     <div className="space-y-4 pb-20">
+      {/* PWA Home Screen Install Banner */}
+      <PWAInstaller />
+
       {/* Realtime Spectrum & Visualizer Container */}
       <div className="relative w-full h-36 glassmorphism rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center border border-pink-500/20">
         <WaveformCanvas />
         <div className="absolute top-2.5 left-3 text-[10px] uppercase font-bold text-slate-400 tracking-widest flex items-center space-x-1 z-10">
-          <span className="w-1.5 h-1.5 rounded-full bg-pink-500 animate-ping" />
+          <span className={`w-1.5 h-1.5 rounded-full ${isRecording ? 'bg-red-500 animate-ping' : isMicActive ? 'bg-emerald-500 animate-pulse' : 'bg-pink-500'}`} />
           <span>Realtime Audio Visualizer</span>
         </div>
 
         {!isMicActive && (
           <div className="text-slate-500 text-xs font-mono italic z-10">
-            Microphone is currently idle
+            Click Record Take below to start singing
           </div>
         )}
 
@@ -69,32 +74,35 @@ export const StudioPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Main Mic & Record Controls */}
-      <section className="grid grid-cols-2 gap-3 pt-2">
-        <button
-          onClick={() => toggleMic()}
-          className={`p-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 active:scale-95 transition shadow-lg border ${
-            isMicActive
-              ? 'bg-emerald-600 border-emerald-500 text-white'
-              : 'bg-slate-800 border-slate-700 text-slate-300'
-          }`}
-        >
-          <Mic className="w-6 h-6" />
-          <span className="text-xs font-bold">{isMicActive ? 'Mic Active' : 'Start Mic'}</span>
-        </button>
-
+      {/* Main Recording & Ear Monitor Controls */}
+      <section className="space-y-3 pt-2">
         <button
           onClick={() => toggleRecording()}
-          disabled={!isMicActive}
-          className={`p-4 rounded-2xl flex flex-col items-center justify-center gap-1.5 active:scale-95 transition shadow-lg ${
+          className={`w-full p-4 rounded-2xl flex items-center justify-center space-x-2 active:scale-95 transition shadow-xl ${
             isRecording
-              ? 'bg-red-600 text-white animate-pulse'
-              : 'bg-pink-600 disabled:opacity-40 text-white shadow-pink-600/30'
+              ? 'bg-red-600 text-white animate-pulse border border-red-400'
+              : 'bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-pink-600/30'
           }`}
         >
           <Disc className="w-6 h-6" />
-          <span className="text-xs font-bold">{isRecording ? 'Stop Recording' : 'Record Take'}</span>
+          <span className="text-sm font-black uppercase tracking-wider">
+            {isRecording ? 'Stop Recording' : 'Record Vocal Take 🎙️'}
+          </span>
         </button>
+
+        <div className="flex justify-center">
+          <button
+            onClick={() => toggleLiveMonitor()}
+            className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1.5 transition active:scale-95 border ${
+              liveMonitor
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white'
+            }`}
+          >
+            <Headphones className="w-3.5 h-3.5" />
+            <span>{liveMonitor ? 'Live Ear Monitor (On)' : 'Live Ear Monitor (Off)'}</span>
+          </button>
+        </div>
       </section>
     </div>
   );

@@ -1,10 +1,12 @@
 import React from 'react';
 import { useStudioStore } from '../store/useStudioStore';
-import { Settings, Mic, HardDrive, Smartphone, Info } from 'lucide-react';
+import { Settings, ShieldCheck, Smartphone, Info } from 'lucide-react';
 
 export const SettingsPage: React.FC = () => {
   const qualityMode = useStudioStore((state) => state.qualityMode);
+  const noiseCancellation = useStudioStore((state) => state.noiseCancellation);
   const setParam = useStudioStore((state) => state.setParam);
+  const toggleNoiseCancellation = useStudioStore((state) => state.toggleNoiseCancellation);
 
   return (
     <div className="space-y-4 pb-20">
@@ -13,7 +15,28 @@ export const SettingsPage: React.FC = () => {
           <Settings className="w-5 h-5 text-pink-400" />
           <span>App Settings</span>
         </h1>
-        <p className="text-xs text-slate-400">Configure Audio, Performance, and Export options</p>
+        <p className="text-xs text-slate-400">Configure Audio, Noise Suppressor, and Performance options</p>
+      </div>
+
+      {/* Hardware Noise Cancellation */}
+      <div className="glassmorphism p-4 rounded-2xl space-y-3 border border-slate-800">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <ShieldCheck className="w-5 h-5 text-emerald-400" />
+            <div>
+              <h2 className="text-xs font-bold text-white">Hardware Noise Suppression</h2>
+              <p className="text-[10px] text-slate-400">Suppresses room hiss, fan noise & acoustic echo</p>
+            </div>
+          </div>
+          <button
+            onClick={() => toggleNoiseCancellation()}
+            className={`w-12 h-6 rounded-full transition p-1 flex items-center ${
+              noiseCancellation ? 'bg-emerald-500 justify-end' : 'bg-slate-700 justify-start'
+            }`}
+          >
+            <div className="w-4 h-4 rounded-full bg-white shadow-md" />
+          </button>
+        </div>
       </div>
 
       {/* Audio & Performance Section */}

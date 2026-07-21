@@ -8,6 +8,8 @@ import { getPitchDetails } from '../audio/pitch/tuner';
 export type StudioState = {
   isMicActive: boolean;
   isRecording: boolean;
+  liveMonitor: boolean;
+  noiseCancellation: boolean;
   activePresetId: string;
   detectedPitchHz: number;
   detectedNote: string;
@@ -37,6 +39,8 @@ export class StudioController {
   private state: StudioState = {
     isMicActive: false,
     isRecording: false,
+    liveMonitor: false,
+    noiseCancellation: true,
     activePresetId: 'popLead',
     detectedPitchHz: 0,
     detectedNote: '--',
@@ -84,68 +88,53 @@ export class StudioController {
 
   // --- Controller Command Interface ---
 
-  public async toggleMic(): Promise<boolean> {
-    if (!this.state.isMicActive) {
-      try {
-        await audioEngine.start();
-        this.state.isMicActive = true;
-        this.applyParamsToAudioGraph();
-        this.startPitchDetectionLoop();
-      } catch (err) {
-        console.error('Microphone activation failed:', err);
-        this.state.isMicActive = false;
-      }
-    } else {
-      if (this.state.isRecording) {
-        await this.stopRecording();
-      }
-      this.stopPitchDetectionLoop();
-      audioEngine.stop();
-      this.state.isMicActive = false;
+  public async toggleLiveMonitor(): Promise<boolean> {
+    this.state.liveMonitor = !this.state.liveMonitor;
+    if (this.state.liveMonitor) {
+      await this.startMicEngine();
+    } else if (!this.state.isRecording) {
+      this.stopMicEngine();
     }
     this.notify();
-    return this.state.isMicActive;
+    return this.state.liveMonitor;
   }
 
-  private startPitchDetectionLoop() {
-    this.stopPitchDetectionLoop();
-    this.pitchTimerId = setInterval(() => {
-      const analyser = audioEngine.getAnalyser();
-      if (!analyser || !this.state.isMicActive) return;
-
-      const buffer = new Float32Array(analyser.fftSize);
-      analyser.getFloatTimeDomainData(buffer);
-
-      const ctx = analyser.context;
-      const hz = autoCorrelatePitch(buffer, ctx.sampleRate);
-      if (hz > 0) {
-        const details = getPitchDetails(hz);
-        this.state.detectedPitchHz = details.frequency;
-        this.state.detectedNote = details.note;
-        this.state.detectedCents = details.cents;
-      } else {
-        this.state.detectedPitchHz = 0;
-        this.state.detectedNote = '--';
-        this.state.detectedCents = 0;
-      }
-      this.notify();
-    }, 50);
-  }
-
-  private stopPitchDetectionLoop() {
-    if (this.pitchTimerId) {
-      clearInterval(this.pitchTimerId);
-      this.pitchTimerId = null;
+  public async toggleNoiseCancellation(): Promise<boolean> {
+    this.state.noiseCancellation = !this.state.noiseCancellation;
+    if (this.state.isMicActive) {
+      await audioEngine.start({ noiseCancellation: this.state.noiseCancellation });
     }
-    this.state.detectedPitchHz = 0;
-    this.state.detectedNote = '--';
-    this.state.detectedCents = 0;
+    this.notify();
+    return this.state.noiseCancellation;
+  }
+
+  private async startMicEngine(): Promise<boolean> {
+    if (this.state.isMicActive) return true;
+    try {
+      await audioEngine.start({ noiseCancellation: this.state.noiseCancellation });
+      this.state.isMicActive = true;
+      this.applyParamsToAudioGraph();
+      this.startPitchDetectionLoop();
+      return true;
+    } catch (err) {
+      console.error('Microphone start failed:', err);
+      this.state.isMicActive = false;
+      return false;
+    }
+  }
+
+  private stopMicEngine(): void {
+    this.stopPitchDetectionLoop();
+    audioEngine.stop();
+    this.state.isMicActive = false;
   }
 
   public async toggleRecording(): Promise<boolean> {
-    if (!this.state.isMicActive) return false;
-
     if (!this.state.isRecording) {
+      // Auto-start mic if not running
+      const started = await this.startMicEngine();
+      if (!started) return false;
+
       const graph = audioEngine.getGraph();
       if (graph) {
         const audioCtx = graph.outputNode.context as AudioContext;
@@ -191,8 +180,47 @@ export class StudioController {
       console.error('Failed to stop/save recording:', e);
     } finally {
       this.state.isRecording = false;
+      // Auto-stop mic if Live Monitor is disabled
+      if (!this.state.liveMonitor) {
+        this.stopMicEngine();
+      }
       this.notify();
     }
+  }
+
+  private startPitchDetectionLoop() {
+    this.stopPitchDetectionLoop();
+    this.pitchTimerId = setInterval(() => {
+      const analyser = audioEngine.getAnalyser();
+      if (!analyser || !this.state.isMicActive) return;
+
+      const buffer = new Float32Array(analyser.fftSize);
+      analyser.getFloatTimeDomainData(buffer);
+
+      const ctx = analyser.context;
+      const hz = autoCorrelatePitch(buffer, ctx.sampleRate);
+      if (hz > 0) {
+        const details = getPitchDetails(hz);
+        this.state.detectedPitchHz = details.frequency;
+        this.state.detectedNote = details.note;
+        this.state.detectedCents = details.cents;
+      } else {
+        this.state.detectedPitchHz = 0;
+        this.state.detectedNote = '--';
+        this.state.detectedCents = 0;
+      }
+      this.notify();
+    }, 50);
+  }
+
+  private stopPitchDetectionLoop() {
+    if (this.pitchTimerId) {
+      clearInterval(this.pitchTimerId);
+      this.pitchTimerId = null;
+    }
+    this.state.detectedPitchHz = 0;
+    this.state.detectedNote = '--';
+    this.state.detectedCents = 0;
   }
 
   public setPreset(presetId: string) {

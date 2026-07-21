@@ -19,7 +19,7 @@ export class AudioEngine {
     return AudioEngine.instance;
   }
 
-  public async start(): Promise<boolean> {
+  public async start(options: { noiseCancellation?: boolean } = {}): Promise<boolean> {
     const ctx = audioContextManager.getContext();
     await audioContextManager.resume();
 
@@ -31,7 +31,7 @@ export class AudioEngine {
       this.analyser.connect(ctx.destination);
     }
 
-    const source = await this.micManager.startMic(ctx);
+    const source = await this.micManager.startMic(ctx, options);
     source.connect(this.graph.inputNode);
     return true;
   }

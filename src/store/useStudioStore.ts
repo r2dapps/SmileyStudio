@@ -2,15 +2,15 @@ import { create } from 'zustand';
 import { studioController, StudioState } from '../core/StudioController';
 
 interface StudioStore extends StudioState {
-  toggleMic: () => Promise<void>;
-  toggleRecording: () => void;
+  toggleLiveMonitor: () => Promise<void>;
+  toggleNoiseCancellation: () => Promise<void>;
+  toggleRecording: () => Promise<void>;
   setPreset: (presetId: string) => void;
   setParam: (key: keyof StudioState, value: any) => void;
   setBackingTrack: (name: string | null) => void;
 }
 
 export const useStudioStore = create<StudioStore>((set) => {
-  // Subscribe Zustand store to StudioController updates
   studioController.subscribe((newState) => {
     set(newState);
   });
@@ -18,12 +18,16 @@ export const useStudioStore = create<StudioStore>((set) => {
   return {
     ...studioController.getState(),
 
-    toggleMic: async () => {
-      await studioController.toggleMic();
+    toggleLiveMonitor: async () => {
+      await studioController.toggleLiveMonitor();
     },
 
-    toggleRecording: () => {
-      studioController.toggleRecording();
+    toggleNoiseCancellation: async () => {
+      await studioController.toggleNoiseCancellation();
+    },
+
+    toggleRecording: async () => {
+      await studioController.toggleRecording();
     },
 
     setPreset: (presetId: string) => {

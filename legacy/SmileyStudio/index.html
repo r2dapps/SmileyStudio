@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#090d16" />
+  <title>Smiley's Music Studio</title>
+  <link rel="manifest" href="manifest.json" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    .glass { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); }
+    input[type=range] { -webkit-appearance: none; background: #1e293b; height: 6px; border-radius: 3px; }
+    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 18px; width: 18px; border-radius: 50%; background: #ec4899; cursor: pointer; }
+  </style>
+</head>
+<body class="bg-slate-950 text-white min-h-screen flex flex-col justify-between select-none font-sans">
+
+  <header class="p-4 glass sticky top-0 z-50 flex items-center justify-between border-b border-slate-800">
+    <div class="flex items-center space-x-2">
+      <div class="w-3 h-3 rounded-full bg-pink-500 animate-pulse"></div>
+      <h1 class="font-black text-lg tracking-wider bg-gradient-to-r from-pink-500 via-purple-400 to-indigo-400 bg-clip-text text-transparent">Smiley's Composer Studio</h1>
+    </div>
+    <div id="statusBadge" class="text-[10px] px-2.5 py-1 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-mono">Offline Ready</div>
+  </header>
+
+  <main class="flex-1 p-4 flex flex-col justify-between max-w-md mx-auto w-full space-y-4">
+    
+    <div class="relative w-full h-32 glass rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center border border-pink-500/20">
+      <canvas id="visualizer" class="absolute inset-0 w-full h-full"></canvas>
+      <div class="absolute top-2 left-3 text-[10px] font-bold text-slate-400 tracking-widest uppercase">Live Spectrum</div>
+      <div id="pitchDisplay" class="absolute bottom-2 right-3 text-xs font-mono bg-black/70 px-2.5 py-1 rounded-md text-pink-400 border border-pink-500/30">Pitch: -- Hz</div>
+    </div>
+
+    <section>
+      <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 flex justify-between">
+        <span>Vocal Tuning Filters</span>
+        <span class="text-pink-400">Pro Singer DSP</span>
+      </h2>
+      <div class="grid grid-cols-3 gap-2">
+        <button onclick="setFilter('popLead')" id="btn-popLead" class="preset-btn p-2.5 rounded-xl glass border-pink-500 text-xs font-semibold flex flex-col items-center gap-1 active:scale-95 transition">
+          <i class="fa-solid fa-star text-pink-400 text-base"></i> Pop Lead Polish
+        </button>
+        <button onclick="setFilter('warmth')" id="btn-warmth" class="preset-btn p-2.5 rounded-xl glass text-xs font-semibold flex flex-col items-center gap-1 active:scale-95 transition text-slate-400">
+          <i class="fa-solid fa-fire text-amber-400 text-base"></i> Acoustic Warmth
+        </button>
+        <button onclick="setFilter('autotune')" id="btn-autotune" class="preset-btn p-2.5 rounded-xl glass text-xs font-semibold flex flex-col items-center gap-1 active:scale-95 transition text-slate-400">
+          <i class="fa-solid fa-wand-magic-sparkles text-purple-400 text-base"></i> Auto-Tune Snap
+        </button>
+        <button onclick="setFilter('lofi')" id="btn-lofi" class="preset-btn p-2.5 rounded-xl glass text-xs font-semibold flex flex-col items-center gap-1 active:scale-95 transition text-slate-400">
+          <i class="fa-solid fa-headphones text-cyan-400 text-base"></i> Lo-Fi Vibe
+        </button>
+        <button onclick="setFilter('deep')" id="btn-deep" class="preset-btn p-2.5 rounded-xl glass text-xs font-semibold flex flex-col items-center gap-1 active:scale-95 transition text-slate-400">
+          <i class="fa-solid fa-mask text-indigo-400 text-base"></i> Deep Harmony
+        </button>
+        <button onclick="setFilter('bypass')" id="btn-bypass" class="preset-btn p-2.5 rounded-xl glass text-xs font-semibold flex flex-col items-center gap-1 active:scale-95 transition text-slate-400">
+          <i class="fa-solid fa-sliders text-slate-400 text-base"></i> Raw Voice
+        </button>
+      </div>
+    </section>
+
+    <section class="glass p-3.5 rounded-2xl space-y-3 border border-slate-800">
+      <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-800 pb-1">DSP Studio Controls</h2>
+      
+      <div>
+        <div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Chorus / Harmony Thickness</span><span id="chorusVal" class="text-pink-400 font-mono">40%</span></div>
+        <input type="range" id="chorusSlider" min="0" max="1" step="0.05" value="0.4" class="w-full" oninput="updateChorusDepth(this.value)" />
+      </div>
+
+      <div>
+        <div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Background Noise Gate</span><span id="gateVal" class="text-pink-400 font-mono">Auto (On)</span></div>
+        <input type="range" id="gateSlider" min="0" max="0.05" step="0.005" value="0.01" class="w-full" oninput="updateNoiseGate(this.value)" />
+      </div>
+
+      <div>
+        <div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Echo Delay Time</span><span id="delayVal" class="text-pink-400 font-mono">0.25 s</span></div>
+        <input type="range" id="delaySlider" min="0" max="0.8" step="0.02" value="0.25" class="w-full" oninput="updateEchoDelay(this.value)" />
+      </div>
+
+      <div>
+        <div class="flex justify-between text-xs mb-1"><span class="text-slate-300">Space Reverb Wet</span><span id="reverbVal" class="text-pink-400 font-mono">35%</span></div>
+        <input type="range" id="reverbSlider" min="0" max="1" step="0.05" value="0.35" class="w-full" oninput="updateReverbWet(this.value)" />
+      </div>
+    </section>
+
+    <section class="glass p-3.5 rounded-2xl space-y-2 border border-slate-800">
+      <div class="flex justify-between items-center">
+        <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Backing / Composition Track</h2>
+        <label class="text-xs text-pink-400 cursor-pointer font-bold bg-pink-500/10 px-2.5 py-1 rounded-md border border-pink-500/30">
+          <i class="fa-solid fa-plus mr-1"></i> Load Song
+          <input type="file" id="trackInput" accept="audio/*" class="hidden" onchange="loadKaraokeTrack(event)" />
+        </label>
+      </div>
+      <div id="trackName" class="text-xs text-slate-400 truncate italic">No song loaded yet...</div>
+      <audio id="karaokeAudio" controls class="w-full h-8 opacity-90 rounded-lg"></audio>
+    </section>
+
+    <section class="grid grid-cols-2 gap-3">
+      <button id="micToggleBtn" onclick="toggleMic()" class="p-3 bg-slate-800 border border-slate-700 rounded-2xl flex flex-col items-center justify-center gap-1 active:scale-95 transition">
+        <i id="micIcon" class="fa-solid fa-microphone-slash text-slate-400 text-lg"></i>
+        <span id="micLabel" class="text-xs font-bold">Start Mic</span>
+      </button>
+
+      <button id="recBtn" onclick="toggleRecording()" disabled class="p-3 bg-pink-600 disabled:opacity-40 rounded-2xl flex flex-col items-center justify-center gap-1 active:scale-95 transition shadow-lg shadow-pink-600/30">
+        <i id="recIcon" class="fa-solid fa-circle text-white text-lg"></i>
+        <span id="recLabel" class="text-xs font-bold">Record Take</span>
+      </button>
+    </section>
+
+    <section class="glass p-4 rounded-2xl space-y-3 border border-slate-800">
+      <h2 class="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-800 pb-1 flex justify-between">
+        <span>Smiley's Compositions Vault</span>
+        <i class="fa-solid fa-share-nodes text-pink-400"></i>
+      </h2>
+      <div id="recordingsList" class="space-y-2 max-h-52 overflow-y-auto pr-1">
+        <p class="text-xs text-slate-500 italic text-center py-2">No saved songs yet...</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="p-2 text-center text-[10px] text-slate-500">
+    Designed for Smiley &bull; Progressive Offline Web App
+  </footer>
+
+  <script>
+    let audioCtx, micStream, micSource, analyser;
+    let inputGain, delayNode, feedbackGain, reverbNode, reverbGainNode, waveshaperNode, biquadFilter;
+    let chorusDelay, chorusLFO, chorusGain;
+    let mediaRecorder, recordedChunks = [];
+    let isMicActive = false, isRecording = false;
+    let activePreset = 'popLead';
+    let pitchInterval, db;
+    let noiseGateThreshold = 0.01;
+
+    const CHROMATIC_SCALE = [130.81, 138.59, 146.83, 155.56, 164.81, 174.61, 185.00, 196.00, 207.65, 220.00, 233.08, 246.94, 261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88];
+
+    // IndexedDB Setup for Offline Song Storage
+    const dbReq = indexedDB.open("SmileyComposerStudioDB", 1);
+    dbReq.onupgradeneeded = (e) => {
+      db = e.target.result;
+      if (!db.objectStoreNames.contains("recordings")) {
+        db.createObjectStore("recordings", { keyPath: "id", autoIncrement: true });
+      }
+    };
+    dbReq.onsuccess = (e) => {
+      db = e.target.result;
+      renderRecordingsList();
+    };
+
+    // PWA Service Worker Registration
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+
+    async function initAudioEngine() {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      inputGain = audioCtx.createGain();
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 2048;
+
+      // Echo DSP Node
+      delayNode = audioCtx.createDelay(1.0);
+      delayNode.delayTime.value = 0.25;
+      feedbackGain = audioCtx.createGain();
+      feedbackGain.gain.value = 0.4;
+
+      // Reverb Engine
+      reverbNode = audioCtx.createConvolver();
+      reverbNode.buffer = generateImpulseResponse(2.5, 2.0);
+      reverbGainNode = audioCtx.createGain();
+      reverbGainNode.gain.value = 0.35;
+
+      // Stereo Chorus Node
+      chorusDelay = audioCtx.createDelay();
+      chorusDelay.delayTime.value = 0.03;
+      chorusLFO = audioCtx.createOscillator();
+      chorusLFO.frequency.value = 1.5; // LFO modulation speed
+      let chorusLFOGain = audioCtx.createGain();
+      chorusLFOGain.gain.value = 0.002;
+      chorusLFO.connect(chorusLFOGain);
+      chorusLFOGain.connect(chorusDelay.delayTime);
+      chorusLFO.start();
+
+      chorusGain = audioCtx.createGain();
+      chorusGain.gain.value = 0.4;
+
+      // EQ & Tube Saturation
+      waveshaperNode = audioCtx.createWaveShaper();
+      waveshaperNode.curve = makeDistortionCurve(10);
+
+      biquadFilter = audioCtx.createBiquadFilter();
+      biquadFilter.type = 'highpass';
+      biquadFilter.frequency.value = 80;
+
+      drawVisualizer();
+    }
+
+    async function toggleMic() {
+      if(!audioCtx) await initAudioEngine();
+      if(audioCtx.state === 'suspended') await audioCtx.resume();
+
+      if(!isMicActive) {
+        try {
+          micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false } });
+          micSource = audioCtx.createMediaStreamSource(micStream);
+          buildDSPGraph();
+
+          isMicActive = true;
+          document.getElementById('micToggleBtn').classList.replace('bg-slate-800', 'bg-emerald-600');
+          document.getElementById('micIcon').className = 'fa-solid fa-microphone text-white text-lg';
+          document.getElementById('micLabel').innerText = 'Mic Active';
+          document.getElementById('recBtn').disabled = false;
+
+          startPitchDetectionAndGate();
+        } catch(err) {
+          alert('Microphone permission required: ' + err.message);
+        }
+      } else {
+        stopMic();
+      }
+    }
+
+    function stopMic() {
+      if(micStream) micStream.getTracks().forEach(t => t.stop());
+      isMicActive = false;
+      clearInterval(pitchInterval);
+      document.getElementById('micToggleBtn').classList.replace('bg-emerald-600', 'bg-slate-800');
+      document.getElementById('micIcon').className = 'fa-solid fa-microphone-slash text-slate-400 text-lg';
+      document.getElementById('micLabel').innerText = 'Start Mic';
+      document.getElementById('recBtn').disabled = true;
+    }
+
+    function buildDSPGraph() {
+      micSource.disconnect(); inputGain.disconnect(); delayNode.disconnect();
+      feedbackGain.disconnect(); reverbNode.disconnect(); biquadFilter.disconnect(); waveshaperNode.disconnect();
+
+      micSource.connect(inputGain);
+      inputGain.connect(biquadFilter);
+      biquadFilter.connect(waveshaperNode);
+
+      // Branch 1: Delay Loop
+      waveshaperNode.connect(delayNode);
+      delayNode.connect(feedbackGain);
+      feedbackGain.connect(delayNode);
+      delayNode.connect(analyser);
+
+      // Branch 2: Chorus Effect
+      waveshaperNode.connect(chorusDelay);
+      chorusDelay.connect(chorusGain);
+      chorusGain.connect(analyser);
+
+      // Branch 3: Reverb
+      waveshaperNode.connect(reverbNode);
+      reverbNode.connect(reverbGainNode);
+      reverbGainNode.connect(analyser);
+
+      // Direct Dry Signal
+      waveshaperNode.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    }
+
+    function setFilter(preset) {
+      activePreset = preset;
+      document.querySelectorAll('.preset-btn').forEach(b => {
+        b.classList.remove('border-pink-500', 'text-white');
+        b.classList.add('text-slate-400');
+      });
+      document.getElementById(`btn-${preset}`).classList.add('border-pink-500', 'text-white');
+
+      if(!audioCtx) return;
+      if (preset === 'popLead') { biquadFilter.type = 'highpass'; biquadFilter.frequency.value = 120; waveshaperNode.curve = makeDistortionCurve(15); }
+      else if (preset === 'warmth') { biquadFilter.type = 'peaking'; biquadFilter.frequency.value = 250; biquadFilter.gain.value = 4; }
+      else if (preset === 'lofi') { biquadFilter.type = 'bandpass'; biquadFilter.frequency.value = 1500; waveshaperNode.curve = makeDistortionCurve(30); }
+      else if (preset === 'deep') { biquadFilter.type = 'lowpass'; biquadFilter.frequency.value = 500; }
+      else if (preset === 'bypass') { biquadFilter.type = 'allpass'; waveshaperNode.curve = null; }
+    }
+
+    function makeDistortionCurve(amount) {
+      let k = amount, n = 44100, curve = new Float32Array(n), deg = Math.PI / 180;
+      for (let i = 0; i < n; ++i) {
+        let x = i * 2 / n - 1;
+        curve[i] = (3 + k) * x * 20 * deg / (Math.PI + k * Math.abs(x));
+      }
+      return curve;
+    }
+
+    function generateImpulseResponse(duration, decay) {
+      let rate = 44100, len = rate * duration, impulse = new AudioContext().createBuffer(2, len, rate);
+      let l = impulse.getChannelData(0), r = impulse.getChannelData(1);
+      for (let i = 0; i < len; i++) {
+        let n = len - i;
+        l[i] = (Math.random() * 2 - 1) * Math.pow(n / len, decay);
+        r[i] = (Math.random() * 2 - 1) * Math.pow(n / len, decay);
+      }
+      return impulse;
+    }
+
+    function updateChorusDepth(val) { document.getElementById('chorusVal').innerText = `${Math.round(val * 100)}%`; if(chorusGain) chorusGain.gain.setValueAtTime(parseFloat(val), audioCtx.currentTime); }
+    function updateNoiseGate(val) { noiseGateThreshold = parseFloat(val); document.getElementById('gateVal').innerText = val == 0 ? "Off" : "Auto"; }
+    function updateEchoDelay(val) { document.getElementById('delayVal').innerText = `${val} s`; if(delayNode) delayNode.delayTime.setValueAtTime(parseFloat(val), audioCtx.currentTime); }
+    function updateReverbWet(val) { document.getElementById('reverbVal').innerText = `${Math.round(val * 100)}%`; if(reverbGainNode) reverbGainNode.gain.setValueAtTime(parseFloat(val), audioCtx.currentTime); }
+
+    function startPitchDetectionAndGate() {
+      const buf = new Float32Array(analyser.fftSize);
+      pitchInterval = setInterval(() => {
+        analyser.getFloatTimeDomainData(buf);
+        let rms = Math.sqrt(buf.reduce((acc, val) => acc + val * val, 0) / buf.length);
+
+        // Noise Gate Logic: Mute input gain if audio drops below room noise threshold
+        if (rms < noiseGateThreshold) {
+          if (inputGain) inputGain.gain.setTargetAtTime(0, audioCtx.currentTime, 0.05);
+        } else {
+          if (inputGain) inputGain.gain.setTargetAtTime(1.0, audioCtx.currentTime, 0.05);
+        }
+
+        let hz = autoCorrelate(buf, audioCtx.sampleRate);
+        if(hz !== -1 && rms >= noiseGateThreshold) {
+          document.getElementById('pitchDisplay').innerText = `Pitch: ${Math.round(hz)} Hz`;
+          if(activePreset === 'autotune') {
+            let note = CHROMATIC_SCALE.reduce((prev, curr) => Math.abs(curr - hz) < Math.abs(prev - hz) ? curr : prev);
+            biquadFilter.type = 'peaking'; biquadFilter.frequency.setValueAtTime(note, audioCtx.currentTime);
+          }
+        } else { document.getElementById('pitchDisplay').innerText = `Pitch: -- Hz`; }
+      }, 50);
+    }
+
+    function autoCorrelate(buf, sampleRate) {
+      let SIZE = buf.length, rms = 0;
+      for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+      if (Math.sqrt(rms / SIZE) < 0.01) return -1;
+      let r1 = 0, r2 = SIZE - 1, thres = 0.2;
+      for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+      for (let i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+      buf = buf.slice(r1, r2); SIZE = buf.length;
+      let c = new Array(SIZE).fill(0);
+      for (let i = 0; i < SIZE; i++) for (let j = 0; j < SIZE - i; j++) c[i] += buf[j] * buf[j + i];
+      let d = 0; while (c[d] > c[d + 1]) d++;
+      let maxval = -1, maxpos = -1;
+      for (let i = d; i < SIZE; i++) if (c[i] > maxval) { maxval = c[i]; maxpos = i; }
+      return sampleRate / maxpos;
+    }
+
+    function loadKaraokeTrack(e) {
+      const file = e.target.files[0];
+      if (file) {
+        document.getElementById('trackName').innerText = file.name;
+        document.getElementById('karaokeAudio').src = URL.createObjectURL(file);
+      }
+    }
+
+    // Record Take
+    function toggleRecording() {
+      if(!isRecording) {
+        recordedChunks = [];
+        let dest = audioCtx.createMediaStreamDestination();
+        analyser.connect(dest);
+
+        const trackEl = document.getElementById('karaokeAudio');
+        if(!trackEl.paused) {
+          let trackSrc = audioCtx.createMediaElementSource(trackEl);
+          trackSrc.connect(dest); trackSrc.connect(audioCtx.destination);
+        }
+
+        mediaRecorder = new MediaRecorder(dest.stream);
+        mediaRecorder.ondataavailable = e => { if(e.data.size > 0) recordedChunks.push(e.data); };
+        mediaRecorder.onstop = saveRecordingToIndexedDB;
+        
+        mediaRecorder.start();
+        isRecording = true;
+        document.getElementById('recBtn').className = 'p-3 bg-red-600 rounded-2xl flex flex-col items-center justify-center gap-1 active:scale-95 transition';
+        document.getElementById('recIcon').className = 'fa-solid fa-square text-white text-lg';
+        document.getElementById('recLabel').innerText = 'Stop';
+      } else {
+        mediaRecorder.stop();
+        isRecording = false;
+        document.getElementById('recBtn').className = 'p-3 bg-pink-600 rounded-2xl flex flex-col items-center justify-center gap-1 active:scale-95 transition shadow-lg shadow-pink-600/30';
+        document.getElementById('recIcon').className = 'fa-solid fa-circle text-white text-lg';
+        document.getElementById('recLabel').innerText = 'Record Take';
+      }
+    }
+
+    function saveRecordingToIndexedDB() {
+      const blob = new Blob(recordedChunks, { type: 'audio/mp3' });
+      const title = prompt("Name this composition for Smiley:", `Smiley_Song_${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`);
+      if (!title) return;
+
+      const tx = db.transaction("recordings", "readwrite");
+      tx.objectStore("recordings").add({ name: title, date: new Date().toLocaleDateString(), blob: blob });
+      tx.oncomplete = renderRecordingsList;
+    }
+
+    function renderRecordingsList() {
+      if (!db) return;
+      const tx = db.transaction("recordings", "readonly");
+      const req = tx.objectStore("recordings").getAll();
+
+      req.onsuccess = () => {
+        const list = document.getElementById('recordingsList');
+        if (req.result.length === 0) {
+          list.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-2">No saved songs yet...</p>`;
+          return;
+        }
+        list.innerHTML = req.result.map(rec => `
+          <div class="p-2.5 bg-slate-900 rounded-xl flex items-center justify-between border border-slate-800">
+            <div class="overflow-hidden mr-2">
+              <p class="text-xs font-bold text-slate-200 truncate">${rec.name}</p>
+              <p class="text-[9px] text-slate-500">${rec.date}</p>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <button onclick="playSavedTrack(${rec.id})" class="p-1.5 bg-pink-500/20 text-pink-400 rounded-lg text-xs"><i class="fa-solid fa-play"></i></button>
+              <button onclick="shareToWhatsApp(${rec.id})" class="p-1.5 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs" title="Share Song"><i class="fa-solid fa-share-nodes"></i></button>
+              <button onclick="exportSavedTrack(${rec.id})" class="p-1.5 bg-purple-500/20 text-purple-400 rounded-lg text-xs"><i class="fa-solid fa-download"></i></button>
+              <button onclick="deleteSavedTrack(${rec.id})" class="p-1.5 bg-red-500/20 text-red-400 rounded-lg text-xs"><i class="fa-solid fa-trash"></i></button>
+            </div>
+          </div>
+        `).join('');
+      };
+    }
+
+    // Direct WhatsApp / Native App Share
+    async function shareToWhatsApp(id) {
+      const tx = db.transaction("recordings", "readonly");
+      tx.objectStore("recordings").get(id).onsuccess = async (e) => {
+        const item = e.target.result;
+        const file = new File([item.blob], `${item.name}.mp3`, { type: 'audio/mp3' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: item.name,
+              text: `Check out my new song composition created in Smiley's Studio! 🎤🎵`
+            });
+          } catch (err) {
+            console.log("Share canceled", err);
+          }
+        } else {
+          alert("Direct file sharing is supported on mobile devices (Android/iOS). Downloading file instead so you can send it manually!");
+          exportSavedTrack(id);
+        }
+      };
+    }
+
+    function playSavedTrack(id) {
+      const tx = db.transaction("recordings", "readonly");
+      tx.objectStore("recordings").get(id).onsuccess = (e) => {
+        const audio = new Audio(URL.createObjectURL(e.target.result.blob));
+        audio.play();
+      };
+    }
+
+    function exportSavedTrack(id) {
+      const tx = db.transaction("recordings", "readonly");
+      tx.objectStore("recordings").get(id).onsuccess = (e) => {
+        const item = e.target.result;
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(item.blob);
+        a.download = `${item.name}.mp3`;
+        a.click();
+      };
+    }
+
+    function deleteSavedTrack(id) {
+      const tx = db.transaction("recordings", "readwrite");
+      tx.objectStore("recordings").delete(id);
+      tx.oncomplete = renderRecordingsList;
+    }
+
+    function drawVisualizer() {
+      const canvas = document.getElementById('visualizer');
+      const ctx = canvas.getContext('2d');
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function render() {
+        requestAnimationFrame(render);
+        canvas.width = canvas.clientWidth; canvas.height = canvas.clientHeight;
+        analyser.getByteFrequencyData(dataArray);
+
+        ctx.fillStyle = 'rgba(9, 13, 22, 0.7)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        const barWidth = (canvas.width / bufferLength) * 2.2;
+        let x = 0;
+        for (let i = 0; i < bufferLength; i++) {
+          let barHeight = (dataArray[i] / 255) * canvas.height;
+          ctx.fillStyle = `hsl(${i * 3 + 310}, 100%, 60%)`;
+          ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+          x += barWidth + 1;
+        }
+      }
+      render();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "short_name": "VocalStudio",
+  "name": "VocalStudio Mobile Karaoke App",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/3083/3083410.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": ".",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "display": "standalone",
+  "orientation": "portrait"
+}

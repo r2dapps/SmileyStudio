@@ -1,18 +1,39 @@
 export class VideoRecorderManager {
   private mediaRecorder: MediaRecorder | null = null;
   private recordedChunks: Blob[] = [];
+  private actualMimeType: string = 'video/mp4';
 
   public startRecording(combinedStream: MediaStream): void {
     this.recordedChunks = [];
-    let mimeType = 'video/webm;codecs=vp9,opus';
-    if (!MediaRecorder.isTypeSupported(mimeType)) {
-      mimeType = 'video/webm';
-    }
-    if (!MediaRecorder.isTypeSupported(mimeType)) {
-      mimeType = 'video/mp4';
+
+    // Try MP4 first (iOS Safari, some Chrome), then WebM variants
+    const mimeTypeCandidates = [
+      'video/mp4;codecs=h264,aac',
+      'video/mp4',
+      'video/webm;codecs=vp9,opus',
+      'video/webm;codecs=vp8,opus',
+      'video/webm',
+    ];
+
+    let selectedMime = '';
+    for (const mime of mimeTypeCandidates) {
+      if (MediaRecorder.isTypeSupported(mime)) {
+        selectedMime = mime;
+        break;
+      }
     }
 
-    this.mediaRecorder = new MediaRecorder(combinedStream, { mimeType });
+    if (!selectedMime) {
+      console.warn('No supported video MIME type found, using default');
+      selectedMime = '';
+    }
+
+    this.actualMimeType = selectedMime || 'video/mp4';
+
+    this.mediaRecorder = new MediaRecorder(
+      combinedStream,
+      selectedMime ? { mimeType: selectedMime } : undefined
+    );
 
     this.mediaRecorder.ondataavailable = (event) => {
       if (event.data && event.data.size > 0) {
@@ -30,8 +51,8 @@ export class VideoRecorderManager {
       }
 
       this.mediaRecorder.onstop = () => {
-        const type = this.recordedChunks[0]?.type || 'video/webm';
-        const videoBlob = new Blob(this.recordedChunks, { type });
+        // Always output as mp4 blob type for sharing compatibility
+        const videoBlob = new Blob(this.recordedChunks, { type: 'video/mp4' });
         this.recordedChunks = [];
         resolve(videoBlob);
       };
@@ -42,5 +63,9 @@ export class VideoRecorderManager {
 
   public get isRecording(): boolean {
     return !!this.mediaRecorder && this.mediaRecorder.state === 'recording';
+  }
+
+  public get mimeType(): string {
+    return this.actualMimeType;
   }
 }

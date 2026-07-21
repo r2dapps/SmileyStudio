@@ -16,6 +16,8 @@ export interface RecordingMetadata {
   blobId: string;
   isVideo?: boolean;
   filterName?: string;
+  aspectRatio?: '9:16' | '1:1' | '4:5' | '16:9';
+  cameraFacing?: 'user' | 'environment';
 }
 
 export class RecordingsRepository {

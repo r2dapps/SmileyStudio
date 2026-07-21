@@ -169,12 +169,14 @@ export const StudioPage: React.FC = () => {
             appVersion: '1.0.0',
             presetVersion: '1.0',
             presetName: activePresetId,
-            format: 'webm',
+            format: 'mp4',
             favorite: false,
             notes: '',
             blobId,
             isVideo: true,
             filterName: selectedFilter.name,
+            aspectRatio,
+            cameraFacing,
           },
           videoBlob
         );

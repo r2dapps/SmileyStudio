@@ -7,7 +7,7 @@ import { AppRoutes } from './routes';
 
 export const App: React.FC = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <AudioErrorBoundary>
         <div className="min-h-screen flex flex-col justify-between bg-slate-950 text-white max-w-lg mx-auto relative shadow-2xl">
           <Header />

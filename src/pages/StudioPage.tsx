@@ -2,7 +2,7 @@ import React from 'react';
 import { useStudioStore } from '../store/useStudioStore';
 import { WaveformCanvas } from '../components/visualizers/WaveformCanvas';
 import { PWAInstaller } from '../components/PWAInstaller';
-import { Disc, Headphones, Sparkles, Sliders, Radio, Wand2, Flame, AlertCircle, X } from 'lucide-react';
+import { Disc, Headphones, Mic, Sliders, Radio, Wand2, Flame, AlertCircle, X } from 'lucide-react';
 import { soundEffects } from '../utils/audioFeedback';
 
 export const StudioPage: React.FC = () => {
@@ -18,7 +18,7 @@ export const StudioPage: React.FC = () => {
   const setPreset = useStudioStore((state) => state.setPreset);
 
   const presets = [
-    { id: 'popLead', label: 'Pop Lead Polish', icon: Sparkles, color: 'text-pink-400' },
+    { id: 'popLead', label: 'Pop Lead Polish', icon: Mic, color: 'text-pink-400' },
     { id: 'warmth', label: 'Acoustic Warmth', icon: Flame, color: 'text-amber-400' },
     { id: 'pitchAssist', label: 'Pitch Snap Assist', icon: Wand2, color: 'text-purple-400' },
     { id: 'lofi', label: 'Lo-Fi Vibe', icon: Headphones, color: 'text-cyan-400' },

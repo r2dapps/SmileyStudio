@@ -1,5 +1,5 @@
 import React from 'react';
-import { Headphones, Settings, Sparkles } from 'lucide-react';
+import { Headphones, Settings, Heart } from 'lucide-react';
 import { useStudioStore } from '../store/useStudioStore';
 import { useNavigate } from 'react-router-dom';
 import { soundEffects } from '../utils/audioFeedback';
@@ -29,7 +29,7 @@ export const Header: React.FC = () => {
           <h1 className="font-black text-lg tracking-wider bg-gradient-to-r from-pink-500 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
             Smiley Studio
           </h1>
-          <Sparkles className="w-4 h-4 text-pink-400" />
+          <Heart className="w-4 h-4 text-pink-500 fill-pink-500/20" />
         </div>
       </div>
 

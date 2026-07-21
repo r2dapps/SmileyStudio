@@ -55,7 +55,7 @@ export class StudioController {
     echoFeedback: 0.4,
     reverbWet: 0.35,
     chorusDepth: 0.4,
-    tubeSaturation: 10,
+    tubeSaturation: 15,
     qualityMode: 'balanced',
     recordingsCount: 0,
   };
@@ -141,7 +141,6 @@ export class StudioController {
 
   public async toggleRecording(): Promise<boolean> {
     if (!this.state.isRecording) {
-      // Auto-start mic if not running
       const started = await this.startMicEngine();
       if (!started) return false;
 
@@ -190,7 +189,6 @@ export class StudioController {
       console.error('Failed to stop/save recording:', e);
     } finally {
       this.state.isRecording = false;
-      // Auto-stop mic if Live Monitor is disabled
       if (!this.state.liveMonitor) {
         this.stopMicEngine();
       }
@@ -235,7 +233,60 @@ export class StudioController {
 
   public setPreset(presetId: string) {
     this.state.activePresetId = presetId;
-    this.applyPreset(presetId);
+
+    // Update state parameters for each preset template
+    if (presetId === 'popLead') {
+      this.state.micGain = 1.0;
+      this.state.noiseGateThreshold = 0.01;
+      this.state.tubeSaturation = 15;
+      this.state.chorusDepth = 0.4;
+      this.state.echoDelayTime = 0.25;
+      this.state.echoFeedback = 0.35;
+      this.state.reverbWet = 0.35;
+    } else if (presetId === 'warmth') {
+      this.state.micGain = 1.1;
+      this.state.noiseGateThreshold = 0.008;
+      this.state.tubeSaturation = 25;
+      this.state.chorusDepth = 0.2;
+      this.state.echoDelayTime = 0.15;
+      this.state.echoFeedback = 0.2;
+      this.state.reverbWet = 0.45;
+    } else if (presetId === 'pitchAssist') {
+      this.state.micGain = 1.0;
+      this.state.noiseGateThreshold = 0.012;
+      this.state.tubeSaturation = 10;
+      this.state.chorusDepth = 0.5;
+      this.state.echoDelayTime = 0.3;
+      this.state.echoFeedback = 0.4;
+      this.state.reverbWet = 0.3;
+    } else if (presetId === 'lofi') {
+      this.state.micGain = 0.9;
+      this.state.noiseGateThreshold = 0.02;
+      this.state.tubeSaturation = 40;
+      this.state.chorusDepth = 0.6;
+      this.state.echoDelayTime = 0.4;
+      this.state.echoFeedback = 0.5;
+      this.state.reverbWet = 0.6;
+    } else if (presetId === 'radio') {
+      this.state.micGain = 1.2;
+      this.state.noiseGateThreshold = 0.025;
+      this.state.tubeSaturation = 35;
+      this.state.chorusDepth = 0.0;
+      this.state.echoDelayTime = 0.1;
+      this.state.echoFeedback = 0.1;
+      this.state.reverbWet = 0.1;
+    } else if (presetId === 'bypass') {
+      this.state.micGain = 1.0;
+      this.state.noiseGateThreshold = 0.005;
+      this.state.tubeSaturation = 0;
+      this.state.chorusDepth = 0.0;
+      this.state.echoDelayTime = 0.05;
+      this.state.echoFeedback = 0.0;
+      this.state.reverbWet = 0.0;
+    }
+
+    this.applyPresetToAudioGraph(presetId);
+    this.applyParamsToAudioGraph();
     this.notify();
   }
 
@@ -252,25 +303,20 @@ export class StudioController {
     this.notify();
   }
 
-  private applyPreset(presetId: string) {
+  private applyPresetToAudioGraph(presetId: string) {
     const graph = audioEngine.getGraph();
     if (!graph) return;
 
     if (presetId === 'popLead') {
       graph.eq.update({ type: 'highpass', frequency: 120 });
-      graph.saturation.update({ amount: 15 });
     } else if (presetId === 'warmth') {
       graph.eq.update({ type: 'peaking', frequency: 250, gain: 4 });
-      graph.saturation.update({ amount: 10 });
     } else if (presetId === 'lofi') {
       graph.eq.update({ type: 'bandpass', frequency: 1500 });
-      graph.saturation.update({ amount: 30 });
     } else if (presetId === 'radio') {
       graph.eq.update({ type: 'bandpass', frequency: 2000 });
-      graph.saturation.update({ amount: 0 });
     } else if (presetId === 'bypass') {
       graph.eq.update({ type: 'allpass' });
-      graph.saturation.update({ amount: 0 });
     }
   }
 

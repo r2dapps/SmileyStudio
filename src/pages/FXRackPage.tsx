@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStudioStore } from '../store/useStudioStore';
-import { Sliders, Shield, Flame, Waves, Repeat, Radio, Sparkles, Wand2, Headphones } from 'lucide-react';
+import { Sliders, Shield, Flame, Waves, Repeat, Radio, Mic, Wand2, Headphones } from 'lucide-react';
 import { soundEffects } from '../utils/audioFeedback';
 
 export const FXRackPage: React.FC = () => {
@@ -17,7 +17,7 @@ export const FXRackPage: React.FC = () => {
   const setPreset = useStudioStore((state) => state.setPreset);
 
   const presets = [
-    { id: 'popLead', label: 'Pop Lead', icon: Sparkles, color: 'text-pink-400' },
+    { id: 'popLead', label: 'Pop Lead', icon: Mic, color: 'text-pink-400' },
     { id: 'warmth', label: 'Acoustic Warmth', icon: Flame, color: 'text-amber-400' },
     { id: 'pitchAssist', label: 'Pitch Snap', icon: Wand2, color: 'text-purple-400' },
     { id: 'lofi', label: 'Lo-Fi Vibe', icon: Headphones, color: 'text-cyan-400' },

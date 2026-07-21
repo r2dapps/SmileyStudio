@@ -20,6 +20,8 @@ export type CustomPreset = {
   };
 };
 
+export type AppTheme = 'neonPink' | 'cyberBlue' | 'emeraldStage' | 'amberSunset';
+
 export type StudioState = {
   isMicActive: boolean;
   isRecording: boolean;
@@ -28,6 +30,7 @@ export type StudioState = {
   micError: string | null;
   activePresetId: string;
   customPresets: CustomPreset[];
+  appTheme: AppTheme;
   detectedPitchHz: number;
   detectedNote: string;
   detectedCents: number;
@@ -61,6 +64,7 @@ export class StudioController {
     micError: null,
     activePresetId: 'popLead',
     customPresets: [],
+    appTheme: 'neonPink',
     detectedPitchHz: 0,
     detectedNote: '--',
     detectedCents: 0,
@@ -82,6 +86,7 @@ export class StudioController {
   private constructor() {
     this.capabilities = detectCapabilities();
     this.loadCustomPresetsFromStorage();
+    this.loadThemeFromStorage();
   }
 
   public static getInstance(): StudioController {
@@ -100,6 +105,23 @@ export class StudioController {
     } catch (e) {
       console.warn('Failed to load custom presets:', e);
     }
+  }
+
+  private loadThemeFromStorage() {
+    try {
+      const savedTheme = localStorage.getItem('smiley_app_theme') as AppTheme;
+      if (savedTheme) {
+        this.state.appTheme = savedTheme;
+      }
+    } catch (e) {}
+  }
+
+  public setTheme(theme: AppTheme) {
+    this.state.appTheme = theme;
+    try {
+      localStorage.setItem('smiley_app_theme', theme);
+    } catch (e) {}
+    this.notify();
   }
 
   private saveCustomPresetsToStorage() {
@@ -304,7 +326,6 @@ export class StudioController {
   public setPreset(presetId: string) {
     this.state.activePresetId = presetId;
 
-    // Check custom presets
     const custom = this.state.customPresets.find((p) => p.id === presetId);
     if (custom) {
       this.state.micGain = custom.params.micGain;

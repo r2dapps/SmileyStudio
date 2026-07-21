@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { studioController, StudioState } from '../core/StudioController';
+import { studioController, StudioState, AppTheme } from '../core/StudioController';
 
 interface StudioStore extends StudioState {
   toggleLiveMonitor: () => Promise<void>;
@@ -8,6 +8,7 @@ interface StudioStore extends StudioState {
   clearMicError: () => void;
   saveCustomPreset: (label: string) => void;
   deleteCustomPreset: (id: string) => void;
+  setTheme: (theme: AppTheme) => void;
   setPreset: (presetId: string) => void;
   setParam: (key: keyof StudioState, value: any) => void;
   setBackingTrack: (name: string | null) => void;
@@ -43,6 +44,10 @@ export const useStudioStore = create<StudioStore>((set) => {
 
     deleteCustomPreset: (id: string) => {
       studioController.deleteCustomPreset(id);
+    },
+
+    setTheme: (theme: AppTheme) => {
+      studioController.setTheme(theme);
     },
 
     setPreset: (presetId: string) => {

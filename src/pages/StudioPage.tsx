@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useStudioStore } from '../store/useStudioStore';
 import { WaveformCanvas } from '../components/visualizers/WaveformCanvas';
 import { PWAInstaller } from '../components/PWAInstaller';
-import { Disc, Headphones, Mic, Sliders, Radio, Wand2, Flame, AlertCircle, X, Camera, RefreshCw, Video, Film, Bookmark } from 'lucide-react';
+import { Disc, Headphones, Mic, Sliders, Radio, Wand2, Flame, AlertCircle, X, Camera, RefreshCw, Video, Film, Bookmark, Maximize2, Minimize2, ChevronDown, ChevronUp, Crop } from 'lucide-react';
 import { soundEffects } from '../utils/audioFeedback';
 import { VIDEO_FILTERS, VideoFilterOption } from '../utils/videoFilters';
 import { VideoRecorderManager } from '../audio/recorder/VideoRecorder';
@@ -28,6 +28,10 @@ export const StudioPage: React.FC = () => {
   // Video state
   const [cameraFacing, setCameraFacing] = useState<'user' | 'environment'>('user');
   const [selectedFilter, setSelectedFilter] = useState<VideoFilterOption>(VIDEO_FILTERS[0]);
+  const [aspectRatio, setAspectRatio] = useState<'9:16' | '1:1' | '4:5' | '16:9'>('9:16');
+  const [isCleanPreview, setIsCleanPreview] = useState<boolean>(false);
+  const [showVideoFilters, setShowVideoFilters] = useState<boolean>(true);
+  const [showVoicePresets, setShowVoicePresets] = useState<boolean>(true);
   const [isVideoRecording, setIsVideoRecording] = useState<boolean>(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
@@ -44,6 +48,13 @@ export const StudioPage: React.FC = () => {
     { id: 'radio', label: 'Vintage Radio', icon: Radio, color: 'text-emerald-400' },
     { id: 'bypass', label: 'Raw Dry Voice', icon: Sliders, color: 'text-slate-400' },
   ];
+
+  const aspectClasses = {
+    '9:16': 'aspect-[9/16] max-h-[480px]',
+    '1:1': 'aspect-square max-h-[360px]',
+    '4:5': 'aspect-[4/5] max-h-[400px]',
+    '16:9': 'aspect-video max-h-[280px]',
+  };
 
   useEffect(() => {
     if (studioMode === 'video') {
@@ -223,8 +234,47 @@ export const StudioPage: React.FC = () => {
       {/* --- VIDEO STUDIO REEL MODE --- */}
       {studioMode === 'video' ? (
         <div className="space-y-4">
+          {/* Top Aspect Ratio & Clean Preview Bar */}
+          <div className="flex items-center justify-between bg-slate-900/60 p-2 rounded-2xl border border-slate-800 text-xs">
+            <div className="flex items-center space-x-1">
+              <Crop className="w-3.5 h-3.5 text-pink-400 mr-1" />
+              {(['9:16', '1:1', '4:5', '16:9'] as const).map((ratio) => (
+                <button
+                  key={ratio}
+                  onClick={() => {
+                    soundEffects.playClickChime();
+                    setAspectRatio(ratio);
+                  }}
+                  className={`px-2 py-1 rounded-lg font-bold transition text-[11px] ${
+                    aspectRatio === ratio
+                      ? 'bg-pink-600 text-white'
+                      : 'bg-slate-800 text-slate-400 hover:text-white'
+                  }`}
+                >
+                  {ratio === '9:16' ? 'Reel 9:16' : ratio}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => {
+                soundEffects.playClickChime();
+                setIsCleanPreview(!isCleanPreview);
+              }}
+              className={`p-1.5 rounded-xl border flex items-center space-x-1 font-bold text-[11px] transition ${
+                isCleanPreview
+                  ? 'bg-pink-500/20 text-pink-400 border-pink-500'
+                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
+              }`}
+              title="Toggle Clean Viewfinder Preview"
+            >
+              {isCleanPreview ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+              <span>{isCleanPreview ? 'Show UI' : 'Clean View'}</span>
+            </button>
+          </div>
+
           {/* Live Camera Viewfinder with Realtime Video Filter */}
-          <div className="relative w-full h-64 glassmorphism rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center border border-pink-500/30 bg-black">
+          <div className={`relative w-full ${aspectClasses[aspectRatio]} glassmorphism rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center border border-pink-500/30 bg-black transition-all duration-300 mx-auto`}>
             <video
               ref={videoPreviewRef}
               autoPlay
@@ -248,92 +298,116 @@ export const StudioPage: React.FC = () => {
             )}
 
             {/* Video Viewfinder Overlays */}
-            <div className="absolute top-2.5 left-3 text-[10px] uppercase font-bold text-slate-200 tracking-widest flex items-center space-x-1 z-10 bg-black/60 px-2 py-1 rounded-md">
-              <span className={`w-2 h-2 rounded-full ${isVideoRecording ? 'bg-red-500 animate-ping' : 'bg-emerald-500'}`} />
-              <span>{isVideoRecording ? 'REC Performance' : selectedFilter.name}</span>
-            </div>
+            {!isCleanPreview && (
+              <>
+                <div className="absolute top-2.5 left-3 text-[10px] uppercase font-bold text-slate-200 tracking-widest flex items-center space-x-1 z-10 bg-black/60 px-2 py-1 rounded-md">
+                  <span className={`w-2 h-2 rounded-full ${isVideoRecording ? 'bg-red-500 animate-ping' : 'bg-emerald-500'}`} />
+                  <span>{isVideoRecording ? 'REC Performance' : `${selectedFilter.name} (${aspectRatio})`}</span>
+                </div>
 
-            <button
-              onClick={handleFlipCamera}
-              className="absolute top-2.5 right-3 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition border border-white/20 z-10"
-              title="Flip Camera"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
+                <button
+                  onClick={handleFlipCamera}
+                  className="absolute top-2.5 right-3 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition border border-white/20 z-10"
+                  title="Flip Camera"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
 
-            <div className="absolute bottom-2.5 right-3 text-xs font-mono bg-black/70 px-2.5 py-1 rounded-md text-pink-400 border border-pink-500/30 z-10">
-              Detected Pitch: <span className="font-bold text-white">{detectedNote}</span>
-            </div>
+                <div className="absolute bottom-2.5 right-3 text-xs font-mono bg-black/70 px-2.5 py-1 rounded-md text-pink-400 border border-pink-500/30 z-10">
+                  Detected Pitch: <span className="font-bold text-white">{detectedNote}</span>
+                </div>
+              </>
+            )}
           </div>
 
-          {/* Visual Video Filters Cards */}
-          <section className="space-y-2">
-            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex justify-between">
-              <span>Visual Video Filters</span>
-              <span className="text-pink-400 font-normal">Camera FX</span>
-            </h2>
+          {/* Collapsible Visual Video Filters Cards */}
+          {!isCleanPreview && (
+            <section className="space-y-2">
+              <button
+                onClick={() => setShowVideoFilters(!showVideoFilters)}
+                className="w-full text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between py-1"
+              >
+                <span className="flex items-center space-x-1.5">
+                  <Film className="w-4 h-4 text-pink-400" />
+                  <span>Visual Video Filters</span>
+                </span>
+                {showVideoFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
 
-            <div className="grid grid-cols-3 gap-2">
-              {VIDEO_FILTERS.map((filter) => {
-                const isSelected = selectedFilter.id === filter.id;
-                return (
-                  <button
-                    key={filter.id}
-                    onClick={() => handleSelectFilter(filter)}
-                    className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
-                      isSelected ? 'border-pink-500 text-white bg-pink-500/20 shadow-lg shadow-pink-500/20' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <Film className={`w-4 h-4 ${isSelected ? 'text-pink-400' : 'text-slate-500'}`} />
-                    <span className="text-[11px] text-center leading-tight">{filter.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+              {showVideoFilters && (
+                <div className="grid grid-cols-3 gap-2 animate-fade-in">
+                  {VIDEO_FILTERS.map((filter) => {
+                    const isSelected = selectedFilter.id === filter.id;
+                    return (
+                      <button
+                        key={filter.id}
+                        onClick={() => handleSelectFilter(filter)}
+                        className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
+                          isSelected ? 'border-pink-500 text-white bg-pink-500/20 shadow-lg shadow-pink-500/20' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <Film className={`w-4 h-4 ${isSelected ? 'text-pink-400' : 'text-slate-500'}`} />
+                        <span className="text-[11px] text-center leading-tight">{filter.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          )}
 
-          {/* Vocal FX Voice Preset Modes for Video */}
-          <section className="space-y-2">
-            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex justify-between">
-              <span>Vocal Voice Presets for Video</span>
-              <span className="text-pink-400 font-normal">DSP Voice Filters</span>
-            </h2>
+          {/* Collapsible Vocal Voice Presets for Video */}
+          {!isCleanPreview && (
+            <section className="space-y-2">
+              <button
+                onClick={() => setShowVoicePresets(!showVoicePresets)}
+                className="w-full text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between py-1"
+              >
+                <span className="flex items-center space-x-1.5">
+                  <Mic className="w-4 h-4 text-purple-400" />
+                  <span>Vocal Voice Presets for Video</span>
+                </span>
+                {showVoicePresets ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
 
-            <div className="grid grid-cols-3 gap-2">
-              {builtInPresets.map((p) => {
-                const Icon = p.icon;
-                const isSelected = activePresetId === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => handleSelectPreset(p.id)}
-                    className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
-                      isSelected ? 'border-pink-500 text-white bg-pink-500/10' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <Icon className={`w-4 h-4 ${p.color}`} />
-                    <span className="text-[11px] text-center leading-tight">{p.label}</span>
-                  </button>
-                );
-              })}
+              {showVoicePresets && (
+                <div className="grid grid-cols-3 gap-2 animate-fade-in">
+                  {builtInPresets.map((p) => {
+                    const Icon = p.icon;
+                    const isSelected = activePresetId === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => handleSelectPreset(p.id)}
+                        className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
+                          isSelected ? 'border-pink-500 text-white bg-pink-500/10' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <Icon className={`w-4 h-4 ${p.color}`} />
+                        <span className="text-[11px] text-center leading-tight">{p.label}</span>
+                      </button>
+                    );
+                  })}
 
-              {customPresets.map((p) => {
-                const isSelected = activePresetId === p.id;
-                return (
-                  <button
-                    key={p.id}
-                    onClick={() => handleSelectPreset(p.id)}
-                    className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
-                      isSelected ? 'border-purple-500 text-white bg-purple-500/10' : 'text-slate-400 hover:text-white'
-                    }`}
-                  >
-                    <Bookmark className="w-4 h-4 text-purple-400" />
-                    <span className="text-[11px] text-center leading-tight truncate max-w-full">{p.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </section>
+                  {customPresets.map((p) => {
+                    const isSelected = activePresetId === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        onClick={() => handleSelectPreset(p.id)}
+                        className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
+                          isSelected ? 'border-purple-500 text-white bg-purple-500/10' : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        <Bookmark className="w-4 h-4 text-purple-400" />
+                        <span className="text-[11px] text-center leading-tight truncate max-w-full">{p.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          )}
 
           {/* Video Recording & Live Ear Monitor Controls */}
           <section className="space-y-3 pt-1">

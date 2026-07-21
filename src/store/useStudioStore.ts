@@ -5,6 +5,7 @@ interface StudioStore extends StudioState {
   toggleLiveMonitor: () => Promise<void>;
   toggleNoiseCancellation: () => Promise<void>;
   toggleRecording: () => Promise<void>;
+  clearMicError: () => void;
   setPreset: (presetId: string) => void;
   setParam: (key: keyof StudioState, value: any) => void;
   setBackingTrack: (name: string | null) => void;
@@ -28,6 +29,10 @@ export const useStudioStore = create<StudioStore>((set) => {
 
     toggleRecording: async () => {
       await studioController.toggleRecording();
+    },
+
+    clearMicError: () => {
+      studioController.clearMicError();
     },
 
     setPreset: (presetId: string) => {

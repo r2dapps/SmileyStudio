@@ -10,6 +10,7 @@ export type StudioState = {
   isRecording: boolean;
   liveMonitor: boolean;
   noiseCancellation: boolean;
+  micError: string | null;
   activePresetId: string;
   detectedPitchHz: number;
   detectedNote: string;
@@ -41,6 +42,7 @@ export class StudioController {
     isRecording: false,
     liveMonitor: false,
     noiseCancellation: true,
+    micError: null,
     activePresetId: 'popLead',
     detectedPitchHz: 0,
     detectedNote: '--',
@@ -86,6 +88,11 @@ export class StudioController {
     this.listeners.forEach((listener) => listener(currentState));
   }
 
+  public clearMicError() {
+    this.state.micError = null;
+    this.notify();
+  }
+
   // --- Controller Command Interface ---
 
   public async toggleLiveMonitor(): Promise<boolean> {
@@ -110,15 +117,18 @@ export class StudioController {
 
   private async startMicEngine(): Promise<boolean> {
     if (this.state.isMicActive) return true;
+    this.state.micError = null;
     try {
       await audioEngine.start({ noiseCancellation: this.state.noiseCancellation });
       this.state.isMicActive = true;
       this.applyParamsToAudioGraph();
       this.startPitchDetectionLoop();
       return true;
-    } catch (err) {
+    } catch (err: any) {
       console.error('Microphone start failed:', err);
       this.state.isMicActive = false;
+      this.state.micError = err?.message || 'Microphone access denied. Please grant microphone permission in browser settings.';
+      this.notify();
       return false;
     }
   }

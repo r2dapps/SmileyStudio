@@ -2,16 +2,18 @@ import React from 'react';
 import { useStudioStore } from '../store/useStudioStore';
 import { WaveformCanvas } from '../components/visualizers/WaveformCanvas';
 import { PWAInstaller } from '../components/PWAInstaller';
-import { Disc, Headphones, Sparkles, Sliders, Radio, Wand2, Flame } from 'lucide-react';
+import { Disc, Headphones, Sparkles, Sliders, Radio, Wand2, Flame, AlertCircle, X } from 'lucide-react';
 
 export const StudioPage: React.FC = () => {
   const isMicActive = useStudioStore((state) => state.isMicActive);
   const isRecording = useStudioStore((state) => state.isRecording);
   const liveMonitor = useStudioStore((state) => state.liveMonitor);
+  const micError = useStudioStore((state) => state.micError);
   const activePresetId = useStudioStore((state) => state.activePresetId);
   const detectedNote = useStudioStore((state) => state.detectedNote);
   const toggleLiveMonitor = useStudioStore((state) => state.toggleLiveMonitor);
   const toggleRecording = useStudioStore((state) => state.toggleRecording);
+  const clearMicError = useStudioStore((state) => state.clearMicError);
   const setPreset = useStudioStore((state) => state.setPreset);
 
   const presets = [
@@ -27,6 +29,19 @@ export const StudioPage: React.FC = () => {
     <div className="space-y-4 pb-20">
       {/* PWA Home Screen Install Banner */}
       <PWAInstaller />
+
+      {/* Mic Access Error Banner */}
+      {micError && (
+        <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-2xl flex items-center justify-between text-xs text-red-200 animate-fade-in">
+          <div className="flex items-center space-x-2">
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+            <span>{micError}</span>
+          </div>
+          <button onClick={() => clearMicError()} className="p-1 hover:text-white">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Realtime Spectrum & Visualizer Container */}
       <div className="relative w-full h-36 glassmorphism rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center border border-pink-500/20">

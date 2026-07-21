@@ -334,10 +334,14 @@ export const StudioPage: React.FC = () => {
 
                 <button
                   onClick={handleFlipCamera}
-                  className="absolute top-2.5 right-3 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition border border-white/20 z-10"
-                  title="Flip Camera (Front/Rear)"
+                  className="absolute top-2.5 right-3 flex items-center space-x-1 bg-black/60 hover:bg-black/80 text-white rounded-full px-2.5 py-1.5 transition border border-white/20 z-10 text-[10px] font-bold"
+                  title={cameraFacing === 'user' ? 'Switch to Rear Camera' : 'Switch to Front Selfie Camera'}
                 >
-                  <RefreshCw className="w-4 h-4" />
+                  <RefreshCw
+                    className="w-3.5 h-3.5"
+                    style={{ transform: cameraFacing === 'user' ? 'scaleX(-1)' : 'none' }}
+                  />
+                  <span>{cameraFacing === 'user' ? 'Front' : 'Rear'}</span>
                 </button>
 
                 <div className="absolute bottom-2.5 right-3 text-xs font-mono bg-black/70 px-2.5 py-1 rounded-md text-pink-400 border border-pink-500/30 z-10">

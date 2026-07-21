@@ -1,16 +1,15 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter } from 'react-router-dom';
 import { Header } from '../components/Header';
 import { BottomNav } from '../components/BottomNav';
 import { AudioErrorBoundary } from '../components/AudioErrorBoundary';
 import { AppRoutes } from './routes';
 import { useStudioStore } from '../store/useStudioStore';
-import { useEffect } from 'react';
 
 export const App: React.FC = () => {
   const appTheme = useStudioStore((state) => state.appTheme);
 
-  // Lock screen orientation to portrait to prevent auto-rotation
+  // Lock screen orientation to portrait on mobile to prevent auto-rotation
   useEffect(() => {
     const lockOrientation = async () => {
       try {
@@ -18,26 +17,37 @@ export const App: React.FC = () => {
           await (screen.orientation as any).lock('portrait');
         }
       } catch (e) {
-        // Silently ignore — desktop browsers don't support orientation lock
+        // Silently ignored — desktop browsers don't support orientation lock
       }
     };
     lockOrientation();
   }, []);
 
   return (
-    <HashRouter>
+    <HashRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <AudioErrorBoundary>
+        {/* Responsive outer wrapper: full-screen on mobile, centered card on desktop */}
         <div
-          className={`theme-${appTheme} h-screen w-full max-w-lg mx-auto flex flex-col justify-between text-white relative shadow-2xl overflow-hidden font-sans transition-all duration-300`}
+          className={`theme-${appTheme} min-h-screen w-full flex items-center justify-center transition-colors duration-300`}
           style={{ backgroundColor: 'var(--bg-main)' }}
         >
-          <Header />
+          <div
+            className="w-full h-screen sm:h-[90vh] sm:max-w-md sm:rounded-3xl sm:shadow-2xl flex flex-col overflow-hidden relative"
+            style={{ backgroundColor: 'var(--bg-main)', border: '1px solid var(--border-accent)' }}
+          >
+            <Header />
 
-          <main className="flex-1 overflow-y-auto p-3 sm:p-4 pb-4">
-            <AppRoutes />
-          </main>
+            <main className="flex-1 overflow-y-auto overscroll-contain p-3 sm:p-4">
+              <AppRoutes />
+            </main>
 
-          <BottomNav />
+            <BottomNav />
+          </div>
         </div>
       </AudioErrorBoundary>
     </HashRouter>

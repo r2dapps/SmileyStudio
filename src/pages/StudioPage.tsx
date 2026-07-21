@@ -20,6 +20,7 @@ export const StudioPage: React.FC = () => {
   const activePresetId = useStudioStore((state) => state.activePresetId);
   const customPresets = useStudioStore((state) => state.customPresets);
   const detectedNote = useStudioStore((state) => state.detectedNote);
+  const appTheme = useStudioStore((state) => state.appTheme);
   const toggleLiveMonitor = useStudioStore((state) => state.toggleLiveMonitor);
   const toggleRecording = useStudioStore((state) => state.toggleRecording);
   const clearMicError = useStudioStore((state) => state.clearMicError);
@@ -39,6 +40,20 @@ export const StudioPage: React.FC = () => {
   const cameraStreamRef = useRef<MediaStream | null>(null);
   const videoRecorderRef = useRef<VideoRecorderManager>(new VideoRecorderManager());
   const videoStartTimeRef = useRef<number>(0);
+
+  const themeBtnGradients = {
+    neonPink: 'from-pink-600 to-purple-600 shadow-pink-600/30',
+    cyberBlue: 'from-cyan-500 to-blue-600 shadow-cyan-500/30',
+    emeraldStage: 'from-emerald-500 to-teal-600 shadow-emerald-500/30',
+    amberSunset: 'from-amber-500 to-orange-600 shadow-amber-500/30',
+  };
+
+  const themeBorderColors = {
+    neonPink: 'border-pink-500 text-pink-400 bg-pink-500/10',
+    cyberBlue: 'border-cyan-400 text-cyan-400 bg-cyan-500/10',
+    emeraldStage: 'border-emerald-400 text-emerald-400 bg-emerald-500/10',
+    amberSunset: 'border-amber-400 text-amber-400 bg-amber-500/10',
+  };
 
   const builtInPresets = [
     { id: 'popLead', label: 'Pop Lead Polish', icon: Mic, color: 'text-pink-400' },
@@ -70,7 +85,7 @@ export const StudioPage: React.FC = () => {
     setCameraError(null);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: cameraFacing, width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: { exact: cameraFacing } },
         audio: false,
       });
       cameraStreamRef.current = stream;
@@ -78,8 +93,20 @@ export const StudioPage: React.FC = () => {
         videoPreviewRef.current.srcObject = stream;
       }
     } catch (e: any) {
-      console.error('Camera access failed:', e);
-      setCameraError('Camera permission denied or camera unavailable.');
+      try {
+        // Fallback for laptops/desktops without exact facing mode
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: cameraFacing },
+          audio: false,
+        });
+        cameraStreamRef.current = stream;
+        if (videoPreviewRef.current) {
+          videoPreviewRef.current.srcObject = stream;
+        }
+      } catch (err: any) {
+        console.error('Camera access failed:', err);
+        setCameraError('Camera permission denied or camera unavailable.');
+      }
     }
   };
 
@@ -194,7 +221,7 @@ export const StudioPage: React.FC = () => {
           }}
           className={`flex-1 py-2 text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 transition ${
             studioMode === 'audio'
-              ? 'bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-lg'
+              ? `bg-gradient-to-r ${themeBtnGradients[appTheme]} text-white shadow-lg`
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -209,7 +236,7 @@ export const StudioPage: React.FC = () => {
           }}
           className={`flex-1 py-2 text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 transition ${
             studioMode === 'video'
-              ? 'bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-lg'
+              ? `bg-gradient-to-r ${themeBtnGradients[appTheme]} text-white shadow-lg`
               : 'text-slate-400 hover:text-white'
           }`}
         >
@@ -247,7 +274,7 @@ export const StudioPage: React.FC = () => {
                   }}
                   className={`px-2 py-1 rounded-lg font-bold transition text-[11px] ${
                     aspectRatio === ratio
-                      ? 'bg-pink-600 text-white'
+                      ? `bg-gradient-to-r ${themeBtnGradients[appTheme]} text-white`
                       : 'bg-slate-800 text-slate-400 hover:text-white'
                   }`}
                 >
@@ -263,7 +290,7 @@ export const StudioPage: React.FC = () => {
               }}
               className={`p-1.5 rounded-xl border flex items-center space-x-1 font-bold text-[11px] transition ${
                 isCleanPreview
-                  ? 'bg-pink-500/20 text-pink-400 border-pink-500'
+                  ? themeBorderColors[appTheme]
                   : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
               }`}
               title="Toggle Clean Viewfinder Preview"
@@ -308,7 +335,7 @@ export const StudioPage: React.FC = () => {
                 <button
                   onClick={handleFlipCamera}
                   className="absolute top-2.5 right-3 p-2 bg-black/60 hover:bg-black/80 text-white rounded-full transition border border-white/20 z-10"
-                  title="Flip Camera"
+                  title="Flip Camera (Front/Rear)"
                 >
                   <RefreshCw className="w-4 h-4" />
                 </button>
@@ -343,7 +370,7 @@ export const StudioPage: React.FC = () => {
                         key={filter.id}
                         onClick={() => handleSelectFilter(filter)}
                         className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
-                          isSelected ? 'border-pink-500 text-white bg-pink-500/20 shadow-lg shadow-pink-500/20' : 'text-slate-400 hover:text-white'
+                          isSelected ? themeBorderColors[appTheme] : 'text-slate-400 hover:text-white'
                         }`}
                       >
                         <Film className={`w-4 h-4 ${isSelected ? 'text-pink-400' : 'text-slate-500'}`} />
@@ -380,7 +407,7 @@ export const StudioPage: React.FC = () => {
                         key={p.id}
                         onClick={() => handleSelectPreset(p.id)}
                         className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
-                          isSelected ? 'border-pink-500 text-white bg-pink-500/10' : 'text-slate-400 hover:text-white'
+                          isSelected ? themeBorderColors[appTheme] : 'text-slate-400 hover:text-white'
                         }`}
                       >
                         <Icon className={`w-4 h-4 ${p.color}`} />
@@ -416,7 +443,7 @@ export const StudioPage: React.FC = () => {
               className={`w-full p-4 rounded-2xl flex items-center justify-center space-x-2 active:scale-95 transition shadow-xl ${
                 isVideoRecording
                   ? 'bg-red-600 text-white animate-pulse border border-red-400'
-                  : 'bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-pink-600/30'
+                  : `bg-gradient-to-r ${themeBtnGradients[appTheme]} text-white`
               }`}
             >
               <Video className="w-6 h-6" />
@@ -478,7 +505,7 @@ export const StudioPage: React.FC = () => {
                     key={p.id}
                     onClick={() => handleSelectPreset(p.id)}
                     className={`p-3 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1.5 active:scale-95 transition ${
-                      isSelected ? 'border-pink-500 text-white bg-pink-500/10' : 'text-slate-400 hover:text-white'
+                      isSelected ? themeBorderColors[appTheme] : 'text-slate-400 hover:text-white'
                     }`}
                   >
                     <Icon className={`w-5 h-5 ${p.color}`} />
@@ -512,7 +539,7 @@ export const StudioPage: React.FC = () => {
               className={`w-full p-4 rounded-2xl flex items-center justify-center space-x-2 active:scale-95 transition shadow-xl ${
                 isRecording
                   ? 'bg-red-600 text-white animate-pulse border border-red-400'
-                  : 'bg-gradient-to-r from-pink-600 to-purple-600 text-white shadow-pink-600/30'
+                  : `bg-gradient-to-r ${themeBtnGradients[appTheme]} text-white`
               }`}
             >
               <Disc className="w-6 h-6" />

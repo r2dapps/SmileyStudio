@@ -2,9 +2,34 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --accent: #ec4899;
+  --accent-secondary: #c084fc;
+}
+
+.theme-neonPink {
+  --accent: #ec4899;
+  --accent-secondary: #c084fc;
+}
+
+.theme-cyberBlue {
+  --accent: #38bdf8;
+  --accent-secondary: #3b82f6;
+}
+
+.theme-emeraldStage {
+  --accent: #34d399;
+  --accent-secondary: #2dd4bf;
+}
+
+.theme-amberSunset {
+  --accent: #fbbf24;
+  --accent-secondary: #f97316;
+}
+
 @layer utilities {
   .glassmorphism {
-    background: rgba(15, 23, 42, 0.82);
+    background: rgba(15, 23, 42, 0.85);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -17,12 +42,8 @@
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
-  .glow-pink {
-    box-shadow: 0 0 20px -5px rgba(236, 72, 153, 0.5);
-  }
-
-  .glow-purple {
-    box-shadow: 0 0 20px -5px rgba(168, 85, 247, 0.5);
+  .glow-theme {
+    box-shadow: 0 0 20px -5px var(--accent);
   }
 }
 
@@ -30,6 +51,7 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  background-color: #090d16;
 }
 
 input[type=range] {
@@ -44,9 +66,9 @@ input[type=range]::-webkit-slider-thumb {
   height: 18px;
   width: 18px;
   border-radius: 50%;
-  background: #ec4899;
+  background: var(--accent);
   cursor: pointer;
-  box-shadow: 0 0 10px rgba(236, 72, 153, 0.5);
+  box-shadow: 0 0 10px var(--accent);
   transition: transform 0.1s ease;
 }
 

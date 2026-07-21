@@ -1,15 +1,29 @@
 import React from 'react';
-import { Headphones, Settings, Heart } from 'lucide-react';
+import { Headphones, Settings, Heart, Mic } from 'lucide-react';
 import { useStudioStore } from '../store/useStudioStore';
 import { useNavigate } from 'react-router-dom';
 import { soundEffects } from '../utils/audioFeedback';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
-  const isMicActive = useStudioStore((state) => state.isMicActive);
   const isRecording = useStudioStore((state) => state.isRecording);
   const liveMonitor = useStudioStore((state) => state.liveMonitor);
+  const appTheme = useStudioStore((state) => state.appTheme);
   const toggleLiveMonitor = useStudioStore((state) => state.toggleLiveMonitor);
+
+  const themeGradients = {
+    neonPink: 'from-pink-500 via-purple-400 to-indigo-400',
+    cyberBlue: 'from-cyan-400 via-blue-400 to-indigo-400',
+    emeraldStage: 'from-emerald-400 via-teal-400 to-cyan-400',
+    amberSunset: 'from-amber-400 via-orange-400 to-pink-500',
+  };
+
+  const themeMicColors = {
+    neonPink: 'text-pink-400',
+    cyberBlue: 'text-cyan-400',
+    emeraldStage: 'text-emerald-400',
+    amberSunset: 'text-amber-400',
+  };
 
   const handleMonitorToggle = () => {
     soundEffects.playClickChime();
@@ -23,13 +37,13 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-50 glassmorphism px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-      <div className="flex items-center space-x-2.5">
-        <div className={`w-3 h-3 rounded-full ${isRecording ? 'bg-red-500 animate-ping' : isMicActive ? 'bg-emerald-500 animate-pulse' : 'bg-pink-500'}`} />
+      <div className="flex items-center space-x-2">
+        <Mic className={`w-5 h-5 ${themeMicColors[appTheme]} ${isRecording ? 'animate-bounce text-red-500' : ''}`} />
         <div className="flex items-center space-x-1.5">
-          <h1 className="font-black text-lg tracking-wider bg-gradient-to-r from-pink-500 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
+          <h1 className={`font-black text-lg tracking-wider bg-gradient-to-r ${themeGradients[appTheme]} bg-clip-text text-transparent`}>
             Smiley Studio
           </h1>
-          <Heart className="w-4 h-4 text-pink-500 fill-pink-500/20" />
+          <Heart className={`w-4 h-4 ${themeMicColors[appTheme]} fill-current/20`} />
         </div>
       </div>
 

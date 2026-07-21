@@ -45,7 +45,6 @@ export const StudioPage: React.FC = () => {
     { id: 'bypass', label: 'Raw Dry Voice', icon: Sliders, color: 'text-slate-400' },
   ];
 
-  // Initialize/stop camera on Video mode toggle
   useEffect(() => {
     if (studioMode === 'video') {
       startCamera();
@@ -97,7 +96,6 @@ export const StudioPage: React.FC = () => {
     soundEffects.playClickChime();
 
     if (!isVideoRecording) {
-      // Start Video performance recording
       try {
         await audioEngine.start();
         const graph = audioEngine.getGraph();
@@ -110,7 +108,6 @@ export const StudioPage: React.FC = () => {
         const audioDest = audioCtx.createMediaStreamDestination();
         graph.outputNode.connect(audioDest);
 
-        // Combine video track + processed audio track
         const videoTrack = cameraStreamRef.current.getVideoTracks()[0];
         const audioTrack = audioDest.stream.getAudioTracks()[0];
         const combinedStream = new MediaStream([videoTrack, audioTrack]);
@@ -122,7 +119,6 @@ export const StudioPage: React.FC = () => {
         console.error('Failed to start video recording:', err);
       }
     } else {
-      // Stop Video performance recording
       try {
         const videoBlob = await videoRecorderRef.current.stopRecording();
         const duration = Math.round((Date.now() - videoStartTimeRef.current) / 1000);
@@ -274,7 +270,7 @@ export const StudioPage: React.FC = () => {
           <section className="space-y-2">
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex justify-between">
               <span>Visual Video Filters</span>
-              <span className="text-pink-400 font-normal">Realtime Camera FX</span>
+              <span className="text-pink-400 font-normal">Camera FX</span>
             </h2>
 
             <div className="grid grid-cols-3 gap-2">
@@ -296,7 +292,50 @@ export const StudioPage: React.FC = () => {
             </div>
           </section>
 
-          {/* Main Video Record Button */}
+          {/* Vocal FX Voice Preset Modes for Video */}
+          <section className="space-y-2">
+            <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex justify-between">
+              <span>Vocal Voice Presets for Video</span>
+              <span className="text-pink-400 font-normal">DSP Voice Filters</span>
+            </h2>
+
+            <div className="grid grid-cols-3 gap-2">
+              {builtInPresets.map((p) => {
+                const Icon = p.icon;
+                const isSelected = activePresetId === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => handleSelectPreset(p.id)}
+                    className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
+                      isSelected ? 'border-pink-500 text-white bg-pink-500/10' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Icon className={`w-4 h-4 ${p.color}`} />
+                    <span className="text-[11px] text-center leading-tight">{p.label}</span>
+                  </button>
+                );
+              })}
+
+              {customPresets.map((p) => {
+                const isSelected = activePresetId === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => handleSelectPreset(p.id)}
+                    className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
+                      isSelected ? 'border-purple-500 text-white bg-purple-500/10' : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <Bookmark className="w-4 h-4 text-purple-400" />
+                    <span className="text-[11px] text-center leading-tight truncate max-w-full">{p.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Video Recording & Live Ear Monitor Controls */}
           <section className="space-y-3 pt-1">
             <button
               onClick={handleToggleVideoRecord}
@@ -311,6 +350,20 @@ export const StudioPage: React.FC = () => {
                 {isVideoRecording ? 'Stop Video Performance' : 'Record Video Performance'}
               </span>
             </button>
+
+            <div className="flex justify-center">
+              <button
+                onClick={handleToggleMonitor}
+                className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center space-x-1.5 transition active:scale-95 border ${
+                  liveMonitor
+                    ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                    : 'bg-slate-900/80 text-slate-400 border-slate-800 hover:text-white'
+                }`}
+              >
+                <Headphones className="w-3.5 h-3.5" />
+                <span>{liveMonitor ? 'Live Ear Monitor (On)' : 'Live Ear Monitor (Off)'}</span>
+              </button>
+            </div>
           </section>
         </div>
       ) : (

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStudioStore } from '../store/useStudioStore';
-import { Sliders, Shield, Flame, Waves, Repeat, Radio, Mic, Wand2, Headphones } from 'lucide-react';
+import { Sliders, Shield, Flame, Waves, Repeat, Radio, Mic, Wand2, Headphones, Plus, Trash2, Bookmark } from 'lucide-react';
 import { soundEffects } from '../utils/audioFeedback';
 
 export const FXRackPage: React.FC = () => {
   const activePresetId = useStudioStore((state) => state.activePresetId);
+  const customPresets = useStudioStore((state) => state.customPresets);
   const micGain = useStudioStore((state) => state.micGain);
   const noiseGateThreshold = useStudioStore((state) => state.noiseGateThreshold);
   const tubeSaturation = useStudioStore((state) => state.tubeSaturation);
@@ -15,8 +16,13 @@ export const FXRackPage: React.FC = () => {
 
   const setParam = useStudioStore((state) => state.setParam);
   const setPreset = useStudioStore((state) => state.setPreset);
+  const saveCustomPreset = useStudioStore((state) => state.saveCustomPreset);
+  const deleteCustomPreset = useStudioStore((state) => state.deleteCustomPreset);
 
-  const presets = [
+  const [isSaving, setIsSaving] = useState(false);
+  const [newPresetName, setNewPresetName] = useState('');
+
+  const builtInPresets = [
     { id: 'popLead', label: 'Pop Lead', icon: Mic, color: 'text-pink-400' },
     { id: 'warmth', label: 'Acoustic Warmth', icon: Flame, color: 'text-amber-400' },
     { id: 'pitchAssist', label: 'Pitch Snap', icon: Wand2, color: 'text-purple-400' },
@@ -35,17 +41,65 @@ export const FXRackPage: React.FC = () => {
     setParam(key, val);
   };
 
+  const handleSaveSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPresetName.trim()) return;
+    soundEffects.playPresetChime();
+    saveCustomPreset(newPresetName.trim());
+    setNewPresetName('');
+    setIsSaving(false);
+  };
+
   return (
     <div className="space-y-4 pb-20">
-      <div className="border-b border-slate-800 pb-2">
-        <h1 className="text-base font-bold flex items-center space-x-2">
-          <Sliders className="w-5 h-5 text-pink-400" />
-          <span>Vocal FX Processing Rack</span>
-        </h1>
-        <p className="text-xs text-slate-400">Select a Preset Template or Adjust Custom DSP Controls</p>
+      <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+        <div>
+          <h1 className="text-base font-bold flex items-center space-x-2">
+            <Sliders className="w-5 h-5 text-pink-400" />
+            <span>Vocal FX Processing Rack</span>
+          </h1>
+          <p className="text-xs text-slate-400">Select a Preset Template or Adjust Custom DSP Controls</p>
+        </div>
+
+        <button
+          onClick={() => setIsSaving(true)}
+          className="px-2.5 py-1.5 bg-gradient-to-r from-pink-600 to-purple-600 text-white rounded-xl text-xs font-bold flex items-center space-x-1 shadow-lg shadow-pink-600/30 active:scale-95 transition"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span>Save Preset</span>
+        </button>
       </div>
 
-      {/* Predefined Preset Template Cards */}
+      {/* Save Custom Template Modal */}
+      {isSaving && (
+        <form onSubmit={handleSaveSubmit} className="p-3 glassmorphism rounded-2xl border border-pink-500/40 space-y-2 animate-fade-in">
+          <div className="flex justify-between items-center text-xs font-bold text-slate-200">
+            <span className="flex items-center space-x-1.5">
+              <Bookmark className="w-4 h-4 text-pink-400" />
+              <span>Save Custom Voice Preset</span>
+            </span>
+            <button type="button" onClick={() => setIsSaving(false)} className="text-slate-400 hover:text-white">Cancel</button>
+          </div>
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              placeholder="e.g., Smiley Acoustic Reverb"
+              value={newPresetName}
+              onChange={(e) => setNewPresetName(e.target.value)}
+              className="flex-1 px-3 py-1.5 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-pink-500"
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="px-3 py-1.5 bg-pink-600 text-white text-xs font-bold rounded-xl active:scale-95"
+            >
+              Save
+            </button>
+          </div>
+        </form>
+      )}
+
+      {/* Predefined & Custom Preset Template Cards */}
       <section className="space-y-2">
         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex justify-between">
           <span>Vocal Preset Templates</span>
@@ -53,7 +107,7 @@ export const FXRackPage: React.FC = () => {
         </h2>
 
         <div className="grid grid-cols-3 gap-2">
-          {presets.map((p) => {
+          {builtInPresets.map((p) => {
             const Icon = p.icon;
             const isSelected = activePresetId === p.id;
             return (
@@ -67,6 +121,33 @@ export const FXRackPage: React.FC = () => {
                 <Icon className={`w-4 h-4 ${p.color}`} />
                 <span className="text-[11px] text-center leading-tight">{p.label}</span>
               </button>
+            );
+          })}
+
+          {customPresets.map((p) => {
+            const isSelected = activePresetId === p.id;
+            return (
+              <div
+                key={p.id}
+                onClick={() => handleSelectPreset(p.id)}
+                className={`relative p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 cursor-pointer ${
+                  isSelected ? 'border-purple-500 text-white bg-purple-500/10 shadow-lg shadow-purple-500/10' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Bookmark className="w-4 h-4 text-purple-400" />
+                <span className="text-[11px] text-center leading-tight truncate max-w-full">{p.label}</span>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteCustomPreset(p.id);
+                  }}
+                  className="absolute top-1 right-1 p-0.5 text-slate-500 hover:text-red-400"
+                  title="Delete Custom Preset"
+                >
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
             );
           })}
         </div>

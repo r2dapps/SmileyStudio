@@ -6,6 +6,8 @@ interface StudioStore extends StudioState {
   toggleNoiseCancellation: () => Promise<void>;
   toggleRecording: () => Promise<void>;
   clearMicError: () => void;
+  saveCustomPreset: (label: string) => void;
+  deleteCustomPreset: (id: string) => void;
   setPreset: (presetId: string) => void;
   setParam: (key: keyof StudioState, value: any) => void;
   setBackingTrack: (name: string | null) => void;
@@ -33,6 +35,14 @@ export const useStudioStore = create<StudioStore>((set) => {
 
     clearMicError: () => {
       studioController.clearMicError();
+    },
+
+    saveCustomPreset: (label: string) => {
+      studioController.saveCustomPreset(label);
+    },
+
+    deleteCustomPreset: (id: string) => {
+      studioController.deleteCustomPreset(id);
     },
 
     setPreset: (presetId: string) => {

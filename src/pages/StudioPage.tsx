@@ -2,7 +2,7 @@ import React from 'react';
 import { useStudioStore } from '../store/useStudioStore';
 import { WaveformCanvas } from '../components/visualizers/WaveformCanvas';
 import { PWAInstaller } from '../components/PWAInstaller';
-import { Disc, Headphones, Mic, Sliders, Radio, Wand2, Flame, AlertCircle, X } from 'lucide-react';
+import { Disc, Headphones, Mic, Sliders, Radio, Wand2, Flame, AlertCircle, X, Bookmark } from 'lucide-react';
 import { soundEffects } from '../utils/audioFeedback';
 
 export const StudioPage: React.FC = () => {
@@ -11,13 +11,14 @@ export const StudioPage: React.FC = () => {
   const liveMonitor = useStudioStore((state) => state.liveMonitor);
   const micError = useStudioStore((state) => state.micError);
   const activePresetId = useStudioStore((state) => state.activePresetId);
+  const customPresets = useStudioStore((state) => state.customPresets);
   const detectedNote = useStudioStore((state) => state.detectedNote);
   const toggleLiveMonitor = useStudioStore((state) => state.toggleLiveMonitor);
   const toggleRecording = useStudioStore((state) => state.toggleRecording);
   const clearMicError = useStudioStore((state) => state.clearMicError);
   const setPreset = useStudioStore((state) => state.setPreset);
 
-  const presets = [
+  const builtInPresets = [
     { id: 'popLead', label: 'Pop Lead Polish', icon: Mic, color: 'text-pink-400' },
     { id: 'warmth', label: 'Acoustic Warmth', icon: Flame, color: 'text-amber-400' },
     { id: 'pitchAssist', label: 'Pitch Snap Assist', icon: Wand2, color: 'text-purple-400' },
@@ -86,7 +87,7 @@ export const StudioPage: React.FC = () => {
         </h2>
 
         <div className="grid grid-cols-3 gap-2">
-          {presets.map((p) => {
+          {builtInPresets.map((p) => {
             const Icon = p.icon;
             const isSelected = activePresetId === p.id;
             return (
@@ -99,6 +100,22 @@ export const StudioPage: React.FC = () => {
               >
                 <Icon className={`w-5 h-5 ${p.color}`} />
                 <span className="text-[11px] text-center leading-tight">{p.label}</span>
+              </button>
+            );
+          })}
+
+          {customPresets.map((p) => {
+            const isSelected = activePresetId === p.id;
+            return (
+              <button
+                key={p.id}
+                onClick={() => handleSelectPreset(p.id)}
+                className={`p-3 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1.5 active:scale-95 transition ${
+                  isSelected ? 'border-purple-500 text-white bg-purple-500/10' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Bookmark className="w-5 h-5 text-purple-400" />
+                <span className="text-[11px] text-center leading-tight truncate max-w-full">{p.label}</span>
               </button>
             );
           })}

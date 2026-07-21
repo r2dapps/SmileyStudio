@@ -155,7 +155,7 @@ export const VaultPage: React.FC = () => {
                     className="px-3 py-1.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 active:scale-95 transition shadow-lg shadow-purple-600/30"
                   >
                     <Share2 className="w-3.5 h-3.5" />
-                    <span>Share Take</span>
+                    <span>Share Track</span>
                   </button>
 
                   <button

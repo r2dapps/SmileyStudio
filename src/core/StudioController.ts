@@ -5,6 +5,21 @@ import { RecordingsRepository } from '../db/recordings';
 import { autoCorrelatePitch } from '../audio/pitch/detector';
 import { getPitchDetails } from '../audio/pitch/tuner';
 
+export type CustomPreset = {
+  id: string;
+  label: string;
+  isCustom: boolean;
+  params: {
+    micGain: number;
+    noiseGateThreshold: number;
+    tubeSaturation: number;
+    chorusDepth: number;
+    echoDelayTime: number;
+    echoFeedback: number;
+    reverbWet: number;
+  };
+};
+
 export type StudioState = {
   isMicActive: boolean;
   isRecording: boolean;
@@ -12,6 +27,7 @@ export type StudioState = {
   noiseCancellation: boolean;
   micError: string | null;
   activePresetId: string;
+  customPresets: CustomPreset[];
   detectedPitchHz: number;
   detectedNote: string;
   detectedCents: number;
@@ -44,6 +60,7 @@ export class StudioController {
     noiseCancellation: true,
     micError: null,
     activePresetId: 'popLead',
+    customPresets: [],
     detectedPitchHz: 0,
     detectedNote: '--',
     detectedCents: 0,
@@ -64,6 +81,7 @@ export class StudioController {
 
   private constructor() {
     this.capabilities = detectCapabilities();
+    this.loadCustomPresetsFromStorage();
   }
 
   public static getInstance(): StudioController {
@@ -71,6 +89,25 @@ export class StudioController {
       StudioController.instance = new StudioController();
     }
     return StudioController.instance;
+  }
+
+  private loadCustomPresetsFromStorage() {
+    try {
+      const saved = localStorage.getItem('smiley_custom_presets');
+      if (saved) {
+        this.state.customPresets = JSON.parse(saved);
+      }
+    } catch (e) {
+      console.warn('Failed to load custom presets:', e);
+    }
+  }
+
+  private saveCustomPresetsToStorage() {
+    try {
+      localStorage.setItem('smiley_custom_presets', JSON.stringify(this.state.customPresets));
+    } catch (e) {
+      console.warn('Failed to save custom presets:', e);
+    }
   }
 
   public getState(): StudioState {
@@ -91,6 +128,39 @@ export class StudioController {
   public clearMicError() {
     this.state.micError = null;
     this.notify();
+  }
+
+  public saveCustomPreset(label: string): void {
+    const id = `custom_${Date.now()}`;
+    const newPreset: CustomPreset = {
+      id,
+      label,
+      isCustom: true,
+      params: {
+        micGain: this.state.micGain,
+        noiseGateThreshold: this.state.noiseGateThreshold,
+        tubeSaturation: this.state.tubeSaturation,
+        chorusDepth: this.state.chorusDepth,
+        echoDelayTime: this.state.echoDelayTime,
+        echoFeedback: this.state.echoFeedback,
+        reverbWet: this.state.reverbWet,
+      },
+    };
+
+    this.state.customPresets.push(newPreset);
+    this.state.activePresetId = id;
+    this.saveCustomPresetsToStorage();
+    this.notify();
+  }
+
+  public deleteCustomPreset(id: string): void {
+    this.state.customPresets = this.state.customPresets.filter((p) => p.id !== id);
+    if (this.state.activePresetId === id) {
+      this.setPreset('popLead');
+    } else {
+      this.saveCustomPresetsToStorage();
+      this.notify();
+    }
   }
 
   // --- Controller Command Interface ---
@@ -234,8 +304,17 @@ export class StudioController {
   public setPreset(presetId: string) {
     this.state.activePresetId = presetId;
 
-    // Update state parameters for each preset template
-    if (presetId === 'popLead') {
+    // Check custom presets
+    const custom = this.state.customPresets.find((p) => p.id === presetId);
+    if (custom) {
+      this.state.micGain = custom.params.micGain;
+      this.state.noiseGateThreshold = custom.params.noiseGateThreshold;
+      this.state.tubeSaturation = custom.params.tubeSaturation;
+      this.state.chorusDepth = custom.params.chorusDepth;
+      this.state.echoDelayTime = custom.params.echoDelayTime;
+      this.state.echoFeedback = custom.params.echoFeedback;
+      this.state.reverbWet = custom.params.reverbWet;
+    } else if (presetId === 'popLead') {
       this.state.micGain = 1.0;
       this.state.noiseGateThreshold = 0.01;
       this.state.tubeSaturation = 15;

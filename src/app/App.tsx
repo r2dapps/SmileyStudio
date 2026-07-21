@@ -9,10 +9,10 @@ export const App: React.FC = () => {
   return (
     <HashRouter>
       <AudioErrorBoundary>
-        <div className="min-h-screen flex flex-col justify-between bg-slate-950 text-white max-w-lg mx-auto relative shadow-2xl pb-16">
+        <div className="h-screen w-full max-w-lg mx-auto flex flex-col justify-between bg-slate-950 text-white relative shadow-2xl overflow-hidden font-sans">
           <Header />
           
-          <main className="flex-1 p-4 overflow-y-auto">
+          <main className="flex-1 overflow-y-auto p-4 pb-4">
             <AppRoutes />
           </main>
 

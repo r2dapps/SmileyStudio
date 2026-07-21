@@ -12,7 +12,7 @@ export const BottomNav: React.FC = () => {
   ];
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 glassmorphism border-t border-slate-800/80 px-1 py-2 max-w-lg mx-auto pointer-events-auto">
+    <nav className="w-full glassmorphism border-t border-slate-800/80 px-1 py-2 z-50 shrink-0">
       <div className="flex justify-around items-center w-full">
         {navItems.map((item) => (
           <NavLink

@@ -11,7 +11,7 @@ import { RecordingsRepository } from '../db/recordings';
 
 export const StudioPage: React.FC = () => {
   const [studioMode, setStudioMode] = useState<'audio' | 'video'>('audio');
-  
+
   // Audio state
   const isMicActive = useStudioStore((state) => state.isMicActive);
   const isRecording = useStudioStore((state) => state.isRecording);
@@ -20,7 +20,6 @@ export const StudioPage: React.FC = () => {
   const activePresetId = useStudioStore((state) => state.activePresetId);
   const customPresets = useStudioStore((state) => state.customPresets);
   const detectedNote = useStudioStore((state) => state.detectedNote);
-  const appTheme = useStudioStore((state) => state.appTheme);
   const toggleLiveMonitor = useStudioStore((state) => state.toggleLiveMonitor);
   const toggleRecording = useStudioStore((state) => state.toggleRecording);
   const clearMicError = useStudioStore((state) => state.clearMicError);
@@ -41,18 +40,17 @@ export const StudioPage: React.FC = () => {
   const videoRecorderRef = useRef<VideoRecorderManager>(new VideoRecorderManager());
   const videoStartTimeRef = useRef<number>(0);
 
-  const themeBtnGradients = {
-    neonPink: 'from-pink-600 to-purple-600 shadow-pink-600/30',
-    cyberBlue: 'from-cyan-500 to-blue-600 shadow-cyan-500/30',
-    emeraldStage: 'from-emerald-500 to-teal-600 shadow-emerald-500/30',
-    amberSunset: 'from-amber-500 to-orange-600 shadow-amber-500/30',
+  // CSS-variable based styles — work for all 9 themes including custom
+  // Inline style objects so all theme colors are driven by var(--accent) / var(--accent-secondary)
+  const accentBtnStyle: React.CSSProperties = {
+    background: 'linear-gradient(135deg, var(--accent), var(--accent-secondary))',
+    boxShadow: '0 4px 24px -6px var(--accent)',
   };
-
-  const themeBorderColors = {
-    neonPink: 'border-pink-500 text-pink-400 bg-pink-500/10',
-    cyberBlue: 'border-cyan-400 text-cyan-400 bg-cyan-500/10',
-    emeraldStage: 'border-emerald-400 text-emerald-400 bg-emerald-500/10',
-    amberSunset: 'border-amber-400 text-amber-400 bg-amber-500/10',
+  const accentActiveCardStyle: React.CSSProperties = {
+    borderColor: 'var(--accent)',
+    color: 'var(--accent)',
+    backgroundColor: 'rgba(0,0,0,0)',
+    boxShadow: '0 0 0 1px var(--accent)',
   };
 
   const builtInPresets = [
@@ -64,7 +62,7 @@ export const StudioPage: React.FC = () => {
     { id: 'bypass', label: 'Raw Dry Voice', icon: Sliders, color: 'text-slate-400' },
   ];
 
-  const aspectClasses = {
+  const aspectClasses: Record<string, string> = {
     '9:16': 'aspect-[9/16] max-h-[480px]',
     '1:1': 'aspect-square max-h-[360px]',
     '4:5': 'aspect-[4/5] max-h-[400px]',
@@ -94,7 +92,6 @@ export const StudioPage: React.FC = () => {
       }
     } catch (e: any) {
       try {
-        // Fallback for laptops/desktops without exact facing mode
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: cameraFacing },
           audio: false,
@@ -212,30 +209,18 @@ export const StudioPage: React.FC = () => {
       {/* Mode Switcher: Audio Mode / Video Studio Mode */}
       <div className="flex bg-slate-900/80 p-1 rounded-2xl border border-slate-800">
         <button
-          onClick={() => {
-            soundEffects.playClickChime();
-            setStudioMode('audio');
-          }}
-          className={`flex-1 py-2 text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 transition ${
-            studioMode === 'audio'
-              ? `bg-gradient-to-r ${themeBtnGradients[appTheme]} text-white shadow-lg`
-              : 'text-slate-400 hover:text-white'
-          }`}
+          onClick={() => { soundEffects.playClickChime(); setStudioMode('audio'); }}
+          className="flex-1 py-2 text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 transition text-white"
+          style={studioMode === 'audio' ? accentBtnStyle : { color: '#94a3b8' }}
         >
           <Mic className="w-4 h-4" />
           <span>Audio Studio Mode</span>
         </button>
 
         <button
-          onClick={() => {
-            soundEffects.playClickChime();
-            setStudioMode('video');
-          }}
-          className={`flex-1 py-2 text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 transition ${
-            studioMode === 'video'
-              ? `bg-gradient-to-r ${themeBtnGradients[appTheme]} text-white shadow-lg`
-              : 'text-slate-400 hover:text-white'
-          }`}
+          onClick={() => { soundEffects.playClickChime(); setStudioMode('video'); }}
+          className="flex-1 py-2 text-xs font-bold rounded-xl flex items-center justify-center space-x-1.5 transition text-white"
+          style={studioMode === 'video' ? accentBtnStyle : { color: '#94a3b8' }}
         >
           <Video className="w-4 h-4" />
           <span>Video Reel Mode</span>
@@ -261,19 +246,13 @@ export const StudioPage: React.FC = () => {
           {/* Top Aspect Ratio & Clean Preview Bar */}
           <div className="flex items-center justify-between bg-slate-900/60 p-2 rounded-2xl border border-slate-800 text-xs">
             <div className="flex items-center space-x-1">
-              <Crop className="w-3.5 h-3.5 text-pink-400 mr-1" />
+              <Crop className="w-3.5 h-3.5 mr-1" style={{ color: 'var(--accent)' }} />
               {(['9:16', '1:1', '4:5', '16:9'] as const).map((ratio) => (
                 <button
                   key={ratio}
-                  onClick={() => {
-                    soundEffects.playClickChime();
-                    setAspectRatio(ratio);
-                  }}
-                  className={`px-2 py-1 rounded-lg font-bold transition text-[11px] ${
-                    aspectRatio === ratio
-                      ? `bg-gradient-to-r ${themeBtnGradients[appTheme]} text-white`
-                      : 'bg-slate-800 text-slate-400 hover:text-white'
-                  }`}
+                  onClick={() => { soundEffects.playClickChime(); setAspectRatio(ratio); }}
+                  className="px-2 py-1 rounded-lg font-bold transition text-[11px] text-white"
+                  style={aspectRatio === ratio ? accentBtnStyle : { color: '#94a3b8', background: '#1e293b' }}
                 >
                   {ratio === '9:16' ? 'Reel 9:16' : ratio}
                 </button>
@@ -281,15 +260,9 @@ export const StudioPage: React.FC = () => {
             </div>
 
             <button
-              onClick={() => {
-                soundEffects.playClickChime();
-                setIsCleanPreview(!isCleanPreview);
-              }}
-              className={`p-1.5 rounded-xl border flex items-center space-x-1 font-bold text-[11px] transition ${
-                isCleanPreview
-                  ? themeBorderColors[appTheme]
-                  : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-white'
-              }`}
+              onClick={() => { soundEffects.playClickChime(); setIsCleanPreview(!isCleanPreview); }}
+              className="p-1.5 rounded-xl border flex items-center space-x-1 font-bold text-[11px] transition"
+              style={isCleanPreview ? accentActiveCardStyle : { color: '#94a3b8', background: '#1e293b', borderColor: '#334155' }}
               title="Toggle Clean Viewfinder Preview"
             >
               {isCleanPreview ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
@@ -298,7 +271,9 @@ export const StudioPage: React.FC = () => {
           </div>
 
           {/* Live Camera Viewfinder with Realtime Video Filter */}
-          <div className={`relative w-full ${aspectClasses[aspectRatio]} glassmorphism rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center border border-pink-500/30 bg-black transition-all duration-300 mx-auto`}>
+          <div
+            className={`relative w-full ${aspectClasses[aspectRatio]} glassmorphism rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center bg-black transition-all duration-300 mx-auto`}
+          >
             <video
               ref={videoPreviewRef}
               autoPlay
@@ -313,12 +288,9 @@ export const StudioPage: React.FC = () => {
 
             {cameraError && (
               <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-4 text-center space-y-2 z-20">
-                <Camera className="w-8 h-8 text-pink-400 animate-pulse" />
+                <Camera className="w-8 h-8 animate-pulse" style={{ color: 'var(--accent)' }} />
                 <p className="text-xs text-slate-300 font-semibold">{cameraError}</p>
-                <button
-                  onClick={startCamera}
-                  className="px-3 py-1.5 bg-pink-600 text-white text-xs font-bold rounded-xl"
-                >
+                <button onClick={startCamera} className="px-3 py-1.5 text-white text-xs font-bold rounded-xl" style={accentBtnStyle}>
                   Retry Camera
                 </button>
               </div>
@@ -350,14 +322,14 @@ export const StudioPage: React.FC = () => {
                   </div>
                 )}
 
-                <div className="absolute bottom-2.5 right-3 text-xs font-mono bg-black/70 px-2.5 py-1 rounded-md text-pink-400 border border-pink-500/30 z-10">
-                  Detected Pitch: <span className="font-bold text-white">{detectedNote}</span>
+                <div className="absolute bottom-2.5 right-3 text-xs font-mono bg-black/70 px-2.5 py-1 rounded-md border border-white/10 z-10" style={{ color: 'var(--accent)' }}>
+                  Pitch: <span className="font-bold text-white">{detectedNote}</span>
                 </div>
               </>
             )}
           </div>
 
-          {/* Collapsible Visual Video Filters Cards */}
+          {/* Collapsible Visual Video Filters */}
           {!isCleanPreview && (
             <section className="space-y-2">
               <button
@@ -365,7 +337,7 @@ export const StudioPage: React.FC = () => {
                 className="w-full text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between py-1"
               >
                 <span className="flex items-center space-x-1.5">
-                  <Film className="w-4 h-4 text-pink-400" />
+                  <Film className="w-4 h-4" style={{ color: 'var(--accent)' }} />
                   <span>Visual Video Filters</span>
                 </span>
                 {showVideoFilters ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
@@ -379,11 +351,10 @@ export const StudioPage: React.FC = () => {
                       <button
                         key={filter.id}
                         onClick={() => handleSelectFilter(filter)}
-                        className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
-                          isSelected ? themeBorderColors[appTheme] : 'text-slate-400 hover:text-white'
-                        }`}
+                        className="p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 border"
+                        style={isSelected ? accentActiveCardStyle : { borderColor: 'transparent', color: '#94a3b8' }}
                       >
-                        <Film className={`w-4 h-4 ${isSelected ? 'text-pink-400' : 'text-slate-500'}`} />
+                        <Film className="w-4 h-4" style={isSelected ? { color: 'var(--accent)' } : { color: '#64748b' }} />
                         <span className="text-[11px] text-center leading-tight">{filter.name}</span>
                       </button>
                     );
@@ -416,25 +387,22 @@ export const StudioPage: React.FC = () => {
                       <button
                         key={p.id}
                         onClick={() => handleSelectPreset(p.id)}
-                        className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
-                          isSelected ? themeBorderColors[appTheme] : 'text-slate-400 hover:text-white'
-                        }`}
+                        className="p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 border"
+                        style={isSelected ? accentActiveCardStyle : { borderColor: 'transparent', color: '#94a3b8' }}
                       >
                         <Icon className={`w-4 h-4 ${p.color}`} />
                         <span className="text-[11px] text-center leading-tight">{p.label}</span>
                       </button>
                     );
                   })}
-
                   {customPresets.map((p) => {
                     const isSelected = activePresetId === p.id;
                     return (
                       <button
                         key={p.id}
                         onClick={() => handleSelectPreset(p.id)}
-                        className={`p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 ${
-                          isSelected ? 'border-purple-500 text-white bg-purple-500/10' : 'text-slate-400 hover:text-white'
-                        }`}
+                        className="p-2.5 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1 transition active:scale-95 border"
+                        style={isSelected ? { borderColor: '#a855f7', color: '#a855f7', boxShadow: '0 0 0 1px #a855f7' } : { borderColor: 'transparent', color: '#94a3b8' }}
                       >
                         <Bookmark className="w-4 h-4 text-purple-400" />
                         <span className="text-[11px] text-center leading-tight truncate max-w-full">{p.label}</span>
@@ -446,18 +414,15 @@ export const StudioPage: React.FC = () => {
             </section>
           )}
 
-          {/* Video Recording & Live Ear Monitor Controls */}
+          {/* Video Recording & Ear Monitor Controls */}
           <section className="space-y-3 pt-1">
             <button
               onClick={handleToggleVideoRecord}
-              className={`w-full p-4 rounded-2xl flex items-center justify-center space-x-2 active:scale-95 transition shadow-xl ${
-                isVideoRecording
-                  ? 'bg-red-600 text-white animate-pulse border border-red-400'
-                  : `bg-gradient-to-r ${themeBtnGradients[appTheme]} text-white`
-              }`}
+              className="w-full p-4 rounded-2xl flex items-center justify-center space-x-2 active:scale-95 transition shadow-xl text-white font-black"
+              style={isVideoRecording ? { background: '#dc2626', border: '1px solid #f87171' } : accentBtnStyle}
             >
               <Video className="w-6 h-6" />
-              <span className="text-sm font-black uppercase tracking-wider">
+              <span className="text-sm uppercase tracking-wider">
                 {isVideoRecording ? 'Stop Video Performance' : 'Record Video Performance'}
               </span>
             </button>
@@ -480,8 +445,8 @@ export const StudioPage: React.FC = () => {
       ) : (
         /* --- AUDIO STUDIO MODE --- */
         <div className="space-y-4">
-          {/* Realtime Spectrum & Visualizer Container */}
-          <div className="relative w-full h-36 glassmorphism rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center border border-pink-500/20">
+          {/* Realtime Spectrum & Visualizer */}
+          <div className="relative w-full h-36 glassmorphism rounded-2xl overflow-hidden shadow-2xl flex items-center justify-center" style={{ borderColor: 'var(--border-accent)' }}>
             <WaveformCanvas />
             <div className="absolute top-2.5 left-3 text-[10px] uppercase font-bold text-slate-400 tracking-widest flex items-center space-x-1 z-10">
               <span className={`w-1.5 h-1.5 rounded-full ${isRecording ? 'bg-red-500 animate-ping' : isMicActive ? 'bg-emerald-500 animate-pulse' : 'bg-pink-500'}`} />
@@ -494,8 +459,8 @@ export const StudioPage: React.FC = () => {
               </div>
             )}
 
-            <div className="absolute bottom-2.5 right-3 text-xs font-mono bg-black/70 px-2.5 py-1 rounded-md text-pink-400 border border-pink-500/30 z-10">
-              Detected Pitch: <span className="font-bold text-white">{detectedNote}</span>
+            <div className="absolute bottom-2.5 right-3 text-xs font-mono bg-black/70 px-2.5 py-1 rounded-md border border-white/10 z-10" style={{ color: 'var(--accent)' }}>
+              Pitch: <span className="font-bold text-white">{detectedNote}</span>
             </div>
           </div>
 
@@ -503,7 +468,7 @@ export const StudioPage: React.FC = () => {
           <section className="space-y-2">
             <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex justify-between">
               <span>Preset Voice Modes</span>
-              <span className="text-pink-400 font-normal">DSP Studio Presets</span>
+              <span className="font-normal" style={{ color: 'var(--accent)' }}>DSP Studio Presets</span>
             </h2>
 
             <div className="grid grid-cols-3 gap-2">
@@ -514,9 +479,8 @@ export const StudioPage: React.FC = () => {
                   <button
                     key={p.id}
                     onClick={() => handleSelectPreset(p.id)}
-                    className={`p-3 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1.5 active:scale-95 transition ${
-                      isSelected ? themeBorderColors[appTheme] : 'text-slate-400 hover:text-white'
-                    }`}
+                    className="p-3 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1.5 active:scale-95 transition border"
+                    style={isSelected ? accentActiveCardStyle : { borderColor: 'transparent', color: '#94a3b8' }}
                   >
                     <Icon className={`w-5 h-5 ${p.color}`} />
                     <span className="text-[11px] text-center leading-tight">{p.label}</span>
@@ -530,9 +494,8 @@ export const StudioPage: React.FC = () => {
                   <button
                     key={p.id}
                     onClick={() => handleSelectPreset(p.id)}
-                    className={`p-3 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1.5 active:scale-95 transition ${
-                      isSelected ? 'border-purple-500 text-white bg-purple-500/10' : 'text-slate-400 hover:text-white'
-                    }`}
+                    className="p-3 rounded-xl glass-card text-xs font-semibold flex flex-col items-center gap-1.5 active:scale-95 transition border"
+                    style={isSelected ? { borderColor: '#a855f7', color: '#a855f7', boxShadow: '0 0 0 1px #a855f7' } : { borderColor: 'transparent', color: '#94a3b8' }}
                   >
                     <Bookmark className="w-5 h-5 text-purple-400" />
                     <span className="text-[11px] text-center leading-tight truncate max-w-full">{p.label}</span>
@@ -546,14 +509,11 @@ export const StudioPage: React.FC = () => {
           <section className="space-y-3 pt-2">
             <button
               onClick={handleToggleRecord}
-              className={`w-full p-4 rounded-2xl flex items-center justify-center space-x-2 active:scale-95 transition shadow-xl ${
-                isRecording
-                  ? 'bg-red-600 text-white animate-pulse border border-red-400'
-                  : `bg-gradient-to-r ${themeBtnGradients[appTheme]} text-white`
-              }`}
+              className="w-full p-4 rounded-2xl flex items-center justify-center space-x-2 active:scale-95 transition shadow-xl text-white font-black"
+              style={isRecording ? { background: '#dc2626', border: '1px solid #f87171' } : accentBtnStyle}
             >
               <Disc className="w-6 h-6" />
-              <span className="text-sm font-black uppercase tracking-wider">
+              <span className="text-sm uppercase tracking-wider">
                 {isRecording ? 'Stop Recording' : 'Record Vocal Take'}
               </span>
             </button>

@@ -3,12 +3,12 @@ import { RecordingsRepository, RecordingMetadata } from '../db/recordings';
 import { BlobStorage } from '../db/blobStorage';
 import { ExportManager } from '../audio/recorder/ExportManager';
 import { BlobManager } from '../audio/recorder/BlobManager';
-import { FolderHeart, Play, Download, Trash2, Share2, Archive } from 'lucide-react';
+import { FolderHeart, Play, Download, Trash2, Share2, Archive, Video } from 'lucide-react';
 import { soundEffects } from '../utils/audioFeedback';
 
 export const VaultPage: React.FC = () => {
   const [recordings, setRecordings] = useState<RecordingMetadata[]>([]);
-  const [activeAudioUrl, setActiveAudioUrl] = useState<{ id: number; url: string } | null>(null);
+  const [activeMediaUrl, setActiveMediaUrl] = useState<{ id: number; url: string; isVideo?: boolean } | null>(null);
 
   const loadRecordings = async () => {
     try {
@@ -26,17 +26,17 @@ export const VaultPage: React.FC = () => {
   const handlePlay = async (item: RecordingMetadata) => {
     soundEffects.playClickChime();
     if (!item.id) return;
-    if (activeAudioUrl && activeAudioUrl.id === item.id) {
-      BlobManager.revokeURL(activeAudioUrl.url);
-      setActiveAudioUrl(null);
+    if (activeMediaUrl && activeMediaUrl.id === item.id) {
+      BlobManager.revokeURL(activeMediaUrl.url);
+      setActiveMediaUrl(null);
       return;
     }
 
     const blob = await BlobStorage.getBlob(item.blobId);
     if (blob) {
-      if (activeAudioUrl) BlobManager.revokeURL(activeAudioUrl.url);
+      if (activeMediaUrl) BlobManager.revokeURL(activeMediaUrl.url);
       const url = BlobManager.createURL(blob);
-      setActiveAudioUrl({ id: item.id, url });
+      setActiveMediaUrl({ id: item.id, url, isVideo: item.isVideo });
     }
   };
 
@@ -45,15 +45,17 @@ export const VaultPage: React.FC = () => {
     const blob = await BlobStorage.getBlob(item.blobId);
     if (blob) {
       const cleanName = item.title.replace(/[^a-z0-9]/gi, '_');
-      await ExportManager.shareTake(blob, cleanName, 'wav');
+      const format = item.isVideo ? 'webm' : 'wav';
+      await ExportManager.shareTake(blob, cleanName, format);
     }
   };
 
-  const handleExport = async (item: RecordingMetadata, format: 'wav' | 'webm') => {
+  const handleExport = async (item: RecordingMetadata) => {
     soundEffects.playClickChime();
     const blob = await BlobStorage.getBlob(item.blobId);
     if (blob) {
       const cleanName = item.title.replace(/[^a-z0-9]/gi, '_');
+      const format = item.isVideo ? 'webm' : 'wav';
       await ExportManager.exportTake(blob, cleanName, format);
     }
   };
@@ -72,9 +74,9 @@ export const VaultPage: React.FC = () => {
   const handleDelete = async (item: RecordingMetadata) => {
     soundEffects.playClickChime();
     if (!item.id) return;
-    if (activeAudioUrl && activeAudioUrl.id === item.id) {
-      BlobManager.revokeURL(activeAudioUrl.url);
-      setActiveAudioUrl(null);
+    if (activeMediaUrl && activeMediaUrl.id === item.id) {
+      BlobManager.revokeURL(activeMediaUrl.url);
+      setActiveMediaUrl(null);
     }
     await RecordingsRepository.deleteRecording(item.id, item.blobId);
     await loadRecordings();
@@ -88,7 +90,7 @@ export const VaultPage: React.FC = () => {
             <FolderHeart className="w-5 h-5 text-pink-400" />
             <span>My Recorded Songs</span>
           </h1>
-          <p className="text-xs text-slate-400">Recorded Takes, File Sharing & Multi-Format Exports</p>
+          <p className="text-xs text-slate-400">Audio & Video Takes, File Sharing & Multi-Format Exports</p>
         </div>
 
         {recordings.length > 0 && (
@@ -109,13 +111,13 @@ export const VaultPage: React.FC = () => {
             <FolderHeart className="w-4 h-4 text-pink-400" />
             <span>Song Library</span>
           </span>
-          <span className="text-[10px] text-pink-400 font-mono">{recordings.length} Songs</span>
+          <span className="text-[10px] text-pink-400 font-mono">{recordings.length} Takes</span>
         </div>
 
         {recordings.length === 0 ? (
           <div className="py-8 text-center space-y-2">
-            <p className="text-xs text-slate-500 italic">No recorded songs in your library yet.</p>
-            <p className="text-[11px] text-slate-600">Tap Record in the Studio tab to capture Smiley's songs!</p>
+            <p className="text-xs text-slate-500 italic">No recorded songs or videos in your library yet.</p>
+            <p className="text-[11px] text-slate-600">Tap Record in the Studio tab to capture Smiley's performances!</p>
           </div>
         ) : (
           <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
@@ -123,22 +125,29 @@ export const VaultPage: React.FC = () => {
               <div key={item.id} className="p-3 bg-slate-900/70 rounded-xl border border-slate-800 space-y-2">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h3 className="text-xs font-bold text-slate-200">{item.title}</h3>
+                    <h3 className="text-xs font-bold text-slate-200 flex items-center space-x-1.5">
+                      {item.isVideo && <Video className="w-3.5 h-3.5 text-purple-400" />}
+                      <span>{item.title}</span>
+                    </h3>
                     <p className="text-[10px] text-slate-400 font-mono">
-                      {new Date(item.createdAt).toLocaleDateString()} &bull; Preset: {item.presetName} &bull; {item.duration}s
+                      {new Date(item.createdAt).toLocaleDateString()} &bull; Preset: {item.presetName} {item.filterName ? `• Filter: ${item.filterName}` : ''} &bull; {item.duration}s
                     </p>
                   </div>
                   <button
                     onClick={() => handleDelete(item)}
                     className="p-1 text-slate-500 hover:text-red-400 transition"
-                    title="Delete Song"
+                    title="Delete Take"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
 
-                {activeAudioUrl && activeAudioUrl.id === item.id && (
-                  <audio src={activeAudioUrl.url} controls autoPlay className="w-full h-8 opacity-90 rounded-lg" />
+                {activeMediaUrl && activeMediaUrl.id === item.id && (
+                  item.isVideo ? (
+                    <video src={activeMediaUrl.url} controls autoPlay className="w-full h-44 rounded-xl border border-pink-500/30 object-cover bg-black" />
+                  ) : (
+                    <audio src={activeMediaUrl.url} controls autoPlay className="w-full h-8 opacity-90 rounded-lg" />
+                  )
                 )}
 
                 <div className="flex flex-wrap items-center gap-2 pt-1">
@@ -147,7 +156,7 @@ export const VaultPage: React.FC = () => {
                     className="px-3 py-1.5 bg-pink-500/20 text-pink-400 border border-pink-500/40 rounded-lg text-xs font-bold flex items-center space-x-1 hover:bg-pink-500/30 transition"
                   >
                     <Play className="w-3.5 h-3.5 fill-pink-400" />
-                    <span>{activeAudioUrl && activeAudioUrl.id === item.id ? 'Stop' : 'Play'}</span>
+                    <span>{activeMediaUrl && activeMediaUrl.id === item.id ? 'Stop' : 'Play Take'}</span>
                   </button>
 
                   <button
@@ -159,11 +168,11 @@ export const VaultPage: React.FC = () => {
                   </button>
 
                   <button
-                    onClick={() => handleExport(item, 'wav')}
+                    onClick={() => handleExport(item)}
                     className="px-2.5 py-1.5 bg-slate-800 text-slate-300 border border-slate-700 rounded-lg text-[11px] font-semibold flex items-center space-x-1 hover:text-white transition"
                   >
                     <Download className="w-3 h-3 text-purple-400" />
-                    <span>WAV</span>
+                    <span>{item.isVideo ? 'Download Video' : 'Download Audio'}</span>
                   </button>
                 </div>
               </div>

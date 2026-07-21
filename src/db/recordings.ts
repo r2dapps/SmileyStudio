@@ -10,10 +10,12 @@ export interface RecordingMetadata {
   appVersion: string;
   presetVersion: string;
   presetName: string;
-  format: 'webm' | 'wav';
+  format: 'webm' | 'wav' | 'mp4';
   favorite: boolean;
   notes: string;
   blobId: string;
+  isVideo?: boolean;
+  filterName?: string;
 }
 
 export class RecordingsRepository {

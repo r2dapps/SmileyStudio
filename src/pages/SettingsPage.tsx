@@ -3,6 +3,7 @@ import { useStudioStore } from '../store/useStudioStore';
 import { Settings, ShieldCheck, Smartphone, Info, RefreshCw, Palette, CheckCircle } from 'lucide-react';
 import { soundEffects } from '../utils/audioFeedback';
 import { AppTheme } from '../core/StudioController';
+import { PWAInstaller } from '../components/PWAInstaller';
 
 export const SettingsPage: React.FC = () => {
   const qualityMode = useStudioStore((state) => state.qualityMode);
@@ -31,9 +32,7 @@ export const SettingsPage: React.FC = () => {
     try {
       if ('serviceWorker' in navigator) {
         const reg = await navigator.serviceWorker.getRegistration();
-        if (reg) {
-          await reg.update();
-        }
+        if (reg) await reg.update();
       }
       setTimeout(() => {
         setIsCheckingUpdate(false);
@@ -57,7 +56,16 @@ export const SettingsPage: React.FC = () => {
           <Settings className="w-5 h-5 text-pink-400" />
           <span>App Settings</span>
         </h1>
-        <p className="text-xs text-slate-400">Configure Audio, Glowing Themes, and Updates</p>
+        <p className="text-xs text-slate-400">Themes, Audio, Install App & Updates</p>
+      </div>
+
+      {/* PWA Install Banner — Fixed here in Settings */}
+      <div className="glassmorphism p-4 rounded-2xl space-y-3 border border-slate-800">
+        <h2 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center space-x-1.5 border-b border-slate-800 pb-2">
+          <Smartphone className="w-4 h-4 text-pink-400" />
+          <span>Install App on Phone</span>
+        </h2>
+        <PWAInstaller inline />
       </div>
 
       {/* Glowing Themes Selector */}
@@ -77,11 +85,11 @@ export const SettingsPage: React.FC = () => {
                 className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between transition active:scale-95 ${
                   isSelected
                     ? `bg-slate-900 text-white ${t.borderColor} shadow-lg`
-                    : 'bg-slate-900/60 text-slate-400 border-slate-800 hover:text-white'
+                    : 'bg-slate-900/60 text-slate-400 border-slate-700 hover:text-white'
                 }`}
               >
                 <div className="flex items-center space-x-2">
-                  <div className={`w-3 h-3 rounded-full bg-gradient-to-r ${t.bgGradient}`} />
+                  <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${t.bgGradient} ${isSelected ? 'shadow-lg' : ''}`} />
                   <span>{t.label}</span>
                 </div>
                 {isSelected && <CheckCircle className="w-4 h-4 text-pink-400" />}
@@ -92,7 +100,7 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       {/* Hardware Noise Cancellation */}
-      <div className="glassmorphism p-4 rounded-2xl space-y-3 border border-slate-800">
+      <div className="glassmorphism p-4 rounded-2xl border border-slate-800">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <ShieldCheck className="w-5 h-5 text-emerald-400" />
@@ -149,7 +157,7 @@ export const SettingsPage: React.FC = () => {
             <RefreshCw className={`w-4 h-4 text-purple-400 ${isCheckingUpdate ? 'animate-spin' : ''}`} />
             <div>
               <h2 className="text-xs font-bold text-white">App Release & Updates</h2>
-              <p className="text-[10px] text-slate-400">Check for latest version releases</p>
+              <p className="text-[10px] text-slate-400">Check for the latest version</p>
             </div>
           </div>
 
@@ -176,7 +184,7 @@ export const SettingsPage: React.FC = () => {
           <span>Smiley Studio v1.0.0</span>
         </div>
         <p className="text-[11px] leading-relaxed">
-          Designed specifically for singer <strong className="text-pink-400">Smiley</strong>. Built with React 18, Vite, Web Audio API DSP Engine, and IndexedDB PWA offline storage.
+          Designed with love for singer <strong className="text-pink-400">Smiley</strong>. Built with React 18, Vite, Web Audio API DSP Engine, and IndexedDB for offline storage.
         </p>
       </div>
     </div>

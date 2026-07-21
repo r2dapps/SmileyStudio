@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useStudioStore } from '../store/useStudioStore';
 import { WaveformCanvas } from '../components/visualizers/WaveformCanvas';
-import { PWAInstaller } from '../components/PWAInstaller';
+
 import { Disc, Headphones, Mic, Sliders, Radio, Wand2, Flame, AlertCircle, X, Camera, RefreshCw, Video, Film, Bookmark, Maximize2, Minimize2, ChevronDown, ChevronUp, Crop } from 'lucide-react';
 import { soundEffects } from '../utils/audioFeedback';
 import { VIDEO_FILTERS, VideoFilterOption } from '../utils/videoFilters';
@@ -209,9 +209,6 @@ export const StudioPage: React.FC = () => {
 
   return (
     <div className="space-y-4 pb-20">
-      {/* PWA Home Screen Install Banner */}
-      <PWAInstaller />
-
       {/* Mode Switcher: Audio Mode / Video Studio Mode */}
       <div className="flex bg-slate-900/80 p-1 rounded-2xl border border-slate-800">
         <button
@@ -308,7 +305,10 @@ export const StudioPage: React.FC = () => {
               playsInline
               muted
               className="w-full h-full object-cover transition-all duration-300"
-              style={{ filter: selectedFilter.cssFilter }}
+              style={{
+                filter: selectedFilter.cssFilter,
+                transform: cameraFacing === 'user' ? 'scaleX(-1)' : 'none',
+              }}
             />
 
             {cameraError && (
